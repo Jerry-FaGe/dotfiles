@@ -1,0 +1,10 @@
+# 仅在交互式 zsh 中加载以下配置。
+[[ -o interactive ]] || return
+
+# 按顺序加载所有模块
+for f in ~/.config/zsh/*.zsh(N); do
+  source "$f"
+done
+
+# 启动通知
+_proxy_startup_notice

@@ -1,0 +1,15 @@
+# Chezmoi source state .gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Age key (NEVER commit this)
+key.txt

@@ -1,0 +1,35 @@
+# 公开数据 —— 所有机器共享，可安全提交到公开仓库
+# 代理敏感信息在 private.toml.age 中（加密）
+
+[packages.common.apt]
+# 基础工具
+packages = [
+    "tmux",
+    "tree",
+    "jq",
+    "ncdu",
+    "unzip",
+    "curl",
+    "wget",
+    "git",
+    "htop",
+    "ripgrep",
+]
+
+[packages.wsl.apt]
+# WSL 专属包
+packages = [
+    "xclip",
+]
+
+[packages.server.apt]
+# 服务器专属包
+packages = [
+    "iotop",
+]
+
+[tools]
+# 通过官方安装器/二进制下载安装的工具
+starship = "1.23.0"
+fzf = "0.61.1"
+age = "1.2.0"

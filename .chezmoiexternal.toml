@@ -1,0 +1,7 @@
+# 外部依赖声明
+# 当需要从外部 git repo 或 archive 拉取配置时在此添加
+# 示例：
+# [".config/nvim"]
+#     type = "git-repo"
+#     url = "https://github.com/LazyVim/starter.git"
+#     refreshPeriod = "168h"

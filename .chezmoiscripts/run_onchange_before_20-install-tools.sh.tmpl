@@ -1,0 +1,171 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -uo pipefail
+
+echo "=== Installing tools via official installers ==="
+
+mkdir -p "$HOME/.local/bin"
+
+install_ok() { echo "  ✓ $1 installed"; }
+install_skip() { echo "  ⊘ $1 already installed"; }
+install_fail() { echo "  ✗ $1 failed: $2 (install manually)"; }
+
+# Starship prompt
+if ! command -v starship >/dev/null 2>&1; then
+  echo "Installing Starship..."
+  curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir "$HOME/.local/bin" 2>/dev/null \
+    && install_ok "Starship" || install_fail "Starship" "curl failed"
+else
+  install_skip "Starship"
+fi
+
+# fzf
+if ! command -v fzf >/dev/null 2>&1; then
+  echo "Installing fzf..."
+  FZF_VERSION="{{ .tools.fzf }}"
+  curl -fSL "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_amd64.tar.gz" \
+    | tar xz -C "$HOME/.local/bin" fzf 2>/dev/null \
+    && install_ok "fzf" || install_fail "fzf" "download/extract failed"
+else
+  install_skip "fzf"
+fi
+
+# age (for encrypted data)
+if ! command -v age >/dev/null 2>&1; then
+  echo "Installing age..."
+  AGE_VERSION="{{ .tools.age }}"
+  TMPDIR=$(mktemp -d)
+  curl -fSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-amd64.tar.gz" \
+    | tar xz -C "$TMPDIR" 2>/dev/null \
+    && mv "$TMPDIR/age/age" "$TMPDIR/age/age-keygen" "$HOME/.local/bin/" \
+    && install_ok "age" || install_fail "age" "download/extract failed"
+  rm -rf "$TMPDIR"
+else
+  install_skip "age"
+fi
+
+# Neovim (AppImage)
+if ! command -v nvim >/dev/null 2>&1; then
+  echo "Installing Neovim..."
+  curl -fSL -o "$HOME/.local/bin/nvim" \
+    "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage" 2>/dev/null \
+    && chmod +x "$HOME/.local/bin/nvim" \
+    && install_ok "Neovim" || install_fail "Neovim" "download failed"
+else
+  install_skip "Neovim"
+fi
+
+# uv (Python package manager)
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null \
+    && install_ok "uv" || install_fail "uv" "install script failed"
+else
+  install_skip "uv"
+fi
+
+# Zinit (zsh plugin manager)
+ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
+if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
+  echo "Installing Zinit..."
+  mkdir -p "$(dirname "$ZINIT_HOME")"
+  git clone --depth 1 https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME" 2>/dev/null \
+    && install_ok "Zinit" || install_fail "Zinit" "git clone failed"
+else
+  install_skip "Zinit"
+fi
+
+# lsd (modern ls)
+if ! command -v lsd >/dev/null 2>&1; then
+  echo "Installing lsd..."
+  LSD_VERSION=$(curl -fsSL https://api.github.com/repos/lsd-rs/lsd/releases/latest 2>/dev/null | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+  if [[ -n "$LSD_VERSION" ]]; then
+    curl -fSL "https://github.com/lsd-rs/lsd/releases/download/v${LSD_VERSION}/lsd-${LSD_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
+      | tar xz -C "$HOME/.local/bin" --strip-components=1 "lsd-${LSD_VERSION}-x86_64-unknown-linux-gnu/lsd" 2>/dev/null \
+      && install_ok "lsd" || install_fail "lsd" "download/extract failed"
+  else
+    install_fail "lsd" "could not determine version"
+  fi
+else
+  install_skip "lsd"
+fi
+
+# bat (modern cat)
+if ! command -v bat >/dev/null 2>&1; then
+  echo "Installing bat..."
+  BAT_VERSION=$(curl -fsSL https://api.github.com/repos/sharkdp/bat/releases/latest 2>/dev/null | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+  if [[ -n "$BAT_VERSION" ]]; then
+    curl -fSL "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
+      | tar xz -C "$HOME/.local/bin" --strip-components=1 "bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu/bat" 2>/dev/null \
+      && install_ok "bat" || install_fail "bat" "download/extract failed"
+  else
+    install_fail "bat" "could not determine version"
+  fi
+else
+  install_skip "bat"
+fi
+
+# fd (modern find)
+if ! command -v fd >/dev/null 2>&1; then
+  echo "Installing fd..."
+  FD_VERSION=$(curl -fsSL https://api.github.com/repos/sharkdp/fd/releases/latest 2>/dev/null | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+  if [[ -n "$FD_VERSION" ]]; then
+    curl -fSL "https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
+      | tar xz -C "$HOME/.local/bin" --strip-components=1 "fd-v${FD_VERSION}-x86_64-unknown-linux-gnu/fd" 2>/dev/null \
+      && install_ok "fd" || install_fail "fd" "download/extract failed"
+  else
+    install_fail "fd" "could not determine version"
+  fi
+else
+  install_skip "fd"
+fi
+
+# yazi (terminal file manager)
+if ! command -v yazi >/dev/null 2>&1; then
+  echo "Installing yazi..."
+  YAZI_VERSION=$(curl -fsSL https://api.github.com/repos/sxyazi/yazi/releases/latest 2>/dev/null | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+  if [[ -n "$YAZI_VERSION" ]]; then
+    TMPDIR=$(mktemp -d)
+    curl -fSL "https://github.com/sxyazi/yazi/releases/download/v${YAZI_VERSION}/yazi-x86_64-unknown-linux-gnu.zip" \
+      -o "$TMPDIR/yazi.zip" 2>/dev/null \
+      && unzip -qo "$TMPDIR/yazi.zip" -d "$TMPDIR" \
+      && mv "$TMPDIR"/yazi-x86_64-unknown-linux-gnu/yazi "$HOME/.local/bin/" \
+      && (mv "$TMPDIR"/yazi-x86_64-unknown-linux-gnu/ya "$HOME/.local/bin/" 2>/dev/null || true) \
+      && install_ok "yazi" || install_fail "yazi" "download/extract failed"
+    rm -rf "$TMPDIR"
+  else
+    install_fail "yazi" "could not determine version"
+  fi
+else
+  install_skip "yazi"
+fi
+
+# lazygit
+if ! command -v lazygit >/dev/null 2>&1; then
+  echo "Installing lazygit..."
+  LAZYGIT_VERSION=$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest 2>/dev/null | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+  if [[ -n "$LAZYGIT_VERSION" ]]; then
+    curl -fSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" \
+      | tar xz -C "$HOME/.local/bin" lazygit 2>/dev/null \
+      && install_ok "lazygit" || install_fail "lazygit" "download/extract failed"
+  else
+    install_fail "lazygit" "could not determine version"
+  fi
+else
+  install_skip "lazygit"
+fi
+
+# zoxide (smart cd)
+if ! command -v zoxide >/dev/null 2>&1; then
+  echo "Installing zoxide..."
+  curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh 2>/dev/null \
+    && install_ok "zoxide" || install_fail "zoxide" "install script failed"
+else
+  install_skip "zoxide"
+fi
+
+echo ""
+echo "=== Tools installation summary ==="
+echo "Missing packages (install manually): sudo apt-get install -y tree ncdu htop"
+echo "=== Tools installation done ==="
+{{ end -}}

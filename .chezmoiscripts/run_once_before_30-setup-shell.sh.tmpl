@@ -1,0 +1,35 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+echo "=== Setting up default shell ==="
+
+# 确保 zsh 已安装
+if ! command -v zsh >/dev/null 2>&1; then
+  echo "zsh not found, skipping shell setup"
+  exit 0
+fi
+
+# 设置 zsh 为默认 shell（如果还不是的话）
+ZSH_PATH=$(which zsh)
+CURRENT_SHELL=$(getent passwd "$USER" | cut -d: -f7)
+
+if [[ "$CURRENT_SHELL" != "$ZSH_PATH" ]]; then
+  echo "Setting default shell to zsh..."
+  if sudo -n true 2>/dev/null; then
+    # 确保 zsh 在 /etc/shells 中
+    if ! grep -qx "$ZSH_PATH" /etc/shells 2>/dev/null; then
+      echo "$ZSH_PATH" | sudo tee -a /etc/shells >/dev/null
+    fi
+    chsh -s "$ZSH_PATH"
+    echo "Default shell set to zsh. Changes take effect on next login."
+  else
+    echo "WARN: sudo requires password, skipping shell setup."
+    echo "Run manually: chsh -s $ZSH_PATH"
+  fi
+else
+  echo "zsh is already the default shell."
+fi
+
+echo "=== Shell setup done ==="
+{{ end -}}

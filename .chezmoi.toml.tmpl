@@ -1,0 +1,10 @@
+{{- if (stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")) -}}
+encryption = "age"
+
+[age]
+    identity = "{{ joinPath .chezmoi.homeDir ".config/chezmoi/key.txt" }}"
+    recipient = "age1zm7h53lxqmaczhhdejc07935ula0ym7405mckadxpa9l93dgjc7skrwtek"
+{{ end -}}
+
+[data]
+    machine_type = "wsl"

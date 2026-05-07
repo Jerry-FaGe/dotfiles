@@ -1,0 +1,95 @@
+#######################################################
+# 代理管理（模板化 — chezmoi apply 时从 age 解密注入）
+#######################################################
+
+{{- $proxy := dict "server_ip" "" "port" "7897" -}}
+{{- if hasKey . "proxy" -}}
+  {{- $proxy = .proxy -}}
+{{- end -}}
+
+{{- if $proxy.server_ip }}
+# 从加密配置中读取的代理服务器信息
+_PROXY_SERVER_IP="{{ $proxy.server_ip }}"
+_PROXY_PORT="{{ $proxy.port }}"
+{{- else }}
+# fallback：未配置代理信息时使用 WSL 网关自动检测
+_PROXY_SERVER_IP=""
+_PROXY_PORT="7897"
+{{- end }}
+
+_wsl_windows_gateway() {
+  local gw
+  gw=$(awk '/^nameserver[[:space:]]+/ { print $2; exit }' /etc/resolv.conf 2>/dev/null)
+  [[ -n "$gw" ]] && print -r -- "$gw"
+}
+
+_proxy_apply() {
+  local proxy_url="$1"
+  export http_proxy="$proxy_url"
+  export https_proxy="$proxy_url"
+  export HTTP_PROXY="$proxy_url"
+  export HTTPS_PROXY="$proxy_url"
+  export ALL_PROXY="$proxy_url"
+  export all_proxy="$proxy_url"
+  export NO_PROXY="localhost,127.0.0.1,::1,.local"
+  export no_proxy="$NO_PROXY"
+}
+
+proxy-on() {
+  local gw port proxy_url
+
+  # 如果有配置代理 IP，检测本机是否就是代理服务器
+  if [[ -n "$_PROXY_SERVER_IP" ]]; then
+    if ip addr show 2>/dev/null | grep -q "$_PROXY_SERVER_IP"; then
+      # 本机就是代理服务器，走本地
+      proxy_url="http://127.0.0.1:${_PROXY_PORT}"
+    else
+      # 走远程代理
+      proxy_url="http://${_PROXY_SERVER_IP}:${_PROXY_PORT}"
+    fi
+    _proxy_apply "$proxy_url"
+    print "Proxy On: $proxy_url"
+    return 0
+  fi
+
+  # fallback：WSL 网关自动检测
+  gw=$(_wsl_windows_gateway)
+  if [[ -z "$gw" ]]; then
+    print 'Proxy On failed: unable to detect Windows gateway from /etc/resolv.conf' >&2
+    return 1
+  fi
+
+  for port in 7897 7890 7891; do
+    if command -v nc >/dev/null 2>&1 && nc -z -w 1 "$gw" "$port" >/dev/null 2>&1; then
+      proxy_url="http://$gw:$port"
+      _proxy_apply "$proxy_url"
+      print "Proxy On: $proxy_url"
+      return 0
+    fi
+  done
+
+  proxy_url="http://$gw:7897"
+  _proxy_apply "$proxy_url"
+  print "Proxy On: $proxy_url (port auto-detect failed, using default 7897)"
+}
+
+proxy-off() {
+  unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY no_proxy
+  print 'Proxy Off'
+}
+
+proxy-status() {
+  print "http_proxy=${http_proxy:-<unset>}"
+  print "https_proxy=${https_proxy:-<unset>}"
+  print "all_proxy=${all_proxy:-<unset>}"
+  print "no_proxy=${no_proxy:-<unset>}"
+  print "proxy_server=${_PROXY_SERVER_IP:-<auto-detect>}"
+}
+
+_proxy_startup_notice() {
+  if [[ -n "${http_proxy:-}${HTTP_PROXY:-}${https_proxy:-}${HTTPS_PROXY:-}${all_proxy:-}${ALL_PROXY:-}" ]]; then
+    print -P "%F{6}[proxy]%f 已启用: ${http_proxy:-${HTTP_PROXY:-${https_proxy:-${HTTPS_PROXY:-${all_proxy:-${ALL_PROXY:-<unknown>}}}}}}"
+  else
+    print -P "%F{8}[proxy]%f 未启用（可用 proxy-on / proxy-off / proxy-status）"
+  fi
+}

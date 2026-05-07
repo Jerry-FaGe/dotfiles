@@ -1,0 +1,53 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+echo "=== Installing apt packages ==="
+
+# 基础包列表（从 .chezmoidata/config.toml 注入）
+PACKAGES=(
+{{- range .packages.common.apt.packages }}
+  {{ . | quote }}
+{{- end }}
+)
+
+{{- if eq .machine_type "wsl" }}
+# WSL 专属包
+PACKAGES+=(
+{{- range .packages.wsl.apt.packages }}
+  {{ . | quote }}
+{{- end }}
+)
+{{- end }}
+
+{{- if eq .machine_type "server" }}
+# 服务器专属包
+PACKAGES+=(
+{{- range .packages.server.apt.packages }}
+  {{ . | quote }}
+{{- end }}
+)
+{{- end }}
+
+# 只安装缺失的包（sudo 失败时跳过而非中断）
+MISSING=()
+for pkg in "${PACKAGES[@]}"; do
+  if ! dpkg -s "$pkg" &>/dev/null; then
+    MISSING+=("$pkg")
+  fi
+done
+
+if [[ ${#MISSING[@]} -eq 0 ]]; then
+  echo "All apt packages already installed."
+else
+  echo "Missing packages: ${MISSING[*]}"
+  if sudo -n true 2>/dev/null; then
+    sudo apt-get install -y "${MISSING[@]}"
+  else
+    echo "WARN: sudo requires password, skipping apt install."
+    echo "Run manually: sudo apt-get install -y ${MISSING[*]}"
+  fi
+fi
+
+echo "=== apt packages done ==="
+{{ end -}}

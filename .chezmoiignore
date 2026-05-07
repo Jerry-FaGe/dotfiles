@@ -1,0 +1,8 @@
+# 忽略非 dotfile 的仓库文件
+README.md
+.gitignore
+LICENSE
+
+# 忽略 chezmoi 内部数据目录（它们会被特殊处理）
+.chezmoidata/
+.chezmoitemplates/
