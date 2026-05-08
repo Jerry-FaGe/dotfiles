@@ -9,9 +9,6 @@ ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
 
 source "$ZINIT_HOME/zinit.zsh"
 
-# 全局默认：静默加载
-zinit ice lucid
-
 #######################################################
 # fzf-tab 配置（必须先定义 zstyle）
 #######################################################
@@ -41,9 +38,10 @@ zstyle ':fzf-tab:complete:(vim|nvim|vi):*' \
 # 必须尽早加载
 #######################################################
 
-zinit ice wait'!' nocompinit
-
+zinit ice wait'!' lucid nocompinit
 zinit light Aloxaf/fzf-tab
+
+zinit ice wait'!' lucid
 zinit light Freed-Wu/fzf-tab-source
 
 #######################################################
@@ -51,23 +49,20 @@ zinit light Freed-Wu/fzf-tab-source
 # prompt 出现后立即异步
 #######################################################
 
-# fast syntax highlighting
-zinit ice wait'0' atinit'FAST_HIGHLIGHT[theme]=default'
+zinit ice wait'0' lucid atinit'FAST_HIGHLIGHT[theme]=default'
 zinit light zdharma-continuum/fast-syntax-highlighting
 
 # autosuggestions
-zinit ice wait'0' atload'
+zinit ice wait'0' lucid atload'
   export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 '
 zinit light zsh-users/zsh-autosuggestions
 
 #######################################################
-# Layer 2 - Interactive Enhancement
-# 轻微延迟
+# Layer 2 — Interactive Enhancement
 #######################################################
 
-# history substring search
-zinit ice wait'1' atload'
+zinit ice wait'1' lucid atload'
   export HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
 
   bindkey "$terminfo[kcuu1]" history-substring-search-up
@@ -80,21 +75,17 @@ zinit ice wait'1' atload'
 '
 zinit light zsh-users/zsh-history-substring-search
 
-# forgit
-zinit ice wait'1'
+zinit ice wait'1' lucid
 zinit light wfxr/forgit
 
 #######################################################
-# Layer 3 - Optional Utilities
-# 最后加载
+# Layer 3 — Optional Utilities
 #######################################################
 
-# fzf-git
-zinit ice wait'2' has'fzf'
+zinit ice wait'2' lucid has'fzf'
 zinit light junegunn/fzf-git.sh
 
-# you-should-use
-zinit ice wait'2' atload'
+zinit ice wait'2' lucid atload'
   export YSU_MESSAGE_POSITION="after"
   export YSU_MODE="BESTMATCH"
 '
