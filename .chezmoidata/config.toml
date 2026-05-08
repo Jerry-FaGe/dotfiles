@@ -1,5 +1,5 @@
 # 公开数据 —— 所有机器共享，可安全提交到公开仓库
-# 代理敏感信息在 private.toml.age 中（加密）
+# 敏感信息在 private.toml.age 中（加密）
 
 [packages.common.apt]
 # 基础工具（apt 版本够用的基建软件）

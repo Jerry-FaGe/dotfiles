@@ -1,21 +1,18 @@
 #######################################################
-# 代理管理（模板化 — chezmoi apply 时从 age 解密注入）
+# 代理管理（从 ~/.config/chezmoi/private.toml 读取配置）
 #######################################################
 
-{{- $proxy := dict "server_ip" "" "port" "7897" -}}
-{{- if hasKey . "proxy" -}}
-  {{- $proxy = .proxy -}}
-{{- end -}}
-
-{{- if $proxy.server_ip }}
-# 从加密配置中读取的代理服务器信息
-_PROXY_SERVER_IP="{{ $proxy.server_ip }}"
-_PROXY_PORT="{{ $proxy.port }}"
-{{- else }}
-# fallback：未配置代理信息时使用 WSL 网关自动检测
 _PROXY_SERVER_IP=""
 _PROXY_PORT="7897"
-{{- end }}
+
+# 从 chezmoi 解密的配置文件读取代理信息
+_private_toml="$HOME/.config/chezmoi/private.toml"
+if [[ -f "$_private_toml" ]]; then
+  _ip=$(grep 'server_ip' "$_private_toml" | sed 's/.*"\(.*\)".*/\1/' 2>/dev/null)
+  _port=$(grep 'port' "$_private_toml" | sed 's/.*"\(.*\)".*/\1/' 2>/dev/null)
+  [[ -n "$_ip" ]] && _PROXY_SERVER_IP="$_ip"
+  [[ -n "$_port" ]] && _PROXY_PORT="$_port"
+fi
 
 _wsl_windows_gateway() {
   local gw
@@ -55,7 +52,7 @@ proxy-on() {
   # fallback：WSL 网关自动检测
   gw=$(_wsl_windows_gateway)
   if [[ -z "$gw" ]]; then
-    print 'Proxy On failed: unable to detect Windows gateway from /etc/resolv.conf' >&2
+    print 'Proxy On failed: no proxy config and unable to detect WSL gateway' >&2
     return 1
   fi
 
