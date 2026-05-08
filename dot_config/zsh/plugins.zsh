@@ -31,9 +31,8 @@ zinit ice wait lucid
 zinit light wfxr/forgit
 
 # fast-syntax-highlighting：语法高亮
-# 不用 turbo 模式，因为 fast-theme 需要立即可用
+# 使用 default 主题（命令=绿色，与旧配置一致）
 zinit light zdharma-continuum/fast-syntax-highlighting
-autoload -Uz fast-theme 2>/dev/null && fast-theme base16 >/dev/null 2>&1
 
 # zsh-history-substring-search：历史搜索
 zinit ice wait lucid atload'
