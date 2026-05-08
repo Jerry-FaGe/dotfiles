@@ -2,7 +2,7 @@
 # 代理敏感信息在 private.toml.age 中（加密）
 
 [packages.common.apt]
-# 基础工具
+# 基础工具（apt 版本够用的基建软件）
 packages = [
     "tmux",
     "tree",
@@ -13,7 +13,6 @@ packages = [
     "wget",
     "git",
     "htop",
-    "ripgrep",
 ]
 
 [packages.wsl.apt]
@@ -30,6 +29,14 @@ packages = [
 
 [tools]
 # 通过官方安装器/二进制下载安装的工具
-starship = "1.23.0"
-fzf = "0.61.1"
+# 改版本号后 chezmoi apply 会自动升级
+starship = "1.25.1"
+fzf = "0.72.0"
 age = "1.2.0"
+lsd = "1.2.0"
+bat = "0.26.1"
+fd = "10.4.2"
+ripgrep = "15.1.0"
+yazi = "26.5.6"
+lazygit = "0.61.1"
+neovim = "0.12.2"
