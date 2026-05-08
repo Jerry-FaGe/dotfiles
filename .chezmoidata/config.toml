@@ -4,6 +4,7 @@
 [packages.common.apt]
 # 基础工具（apt 版本够用的基建软件）
 packages = [
+    "zsh",
     "tmux",
     "tree",
     "jq",
