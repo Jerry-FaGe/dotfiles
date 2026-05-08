@@ -35,20 +35,9 @@ export SUDO_EDITOR=nvim
 export FCEDIT=nvim
 
 #######################################################
-# Lazy NVM
+# fnm (Fast Node Manager)
 #######################################################
 
-export NVM_DIR="$HOME/.nvm"
-
-_lazy_load_nvm() {
-  unset -f nvm node npm npx pnpm yarn corepack
-  [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
-}
-
-for cmd in nvm node npm npx pnpm yarn corepack; do
-  eval "
-  $cmd() {
-    _lazy_load_nvm
-    $cmd \"\$@\"
-  }"
-done
+if command -v fnm >/dev/null 2>&1; then
+  eval "$(fnm env --use-on-cd --shell zsh)"
+fi

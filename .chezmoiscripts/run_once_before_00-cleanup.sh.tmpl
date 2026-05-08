@@ -8,15 +8,24 @@ echo "=== Cleaning up old tools ==="
 if command -v sheldon >/dev/null 2>&1 || [[ -d "$HOME/.config/sheldon" ]]; then
   echo "Cleaning up Sheldon..."
   rm -rf "$HOME/.config/sheldon" "$HOME/.local/share/sheldon"
-  if [[ -f "$HOME/.local/bin/sheldon" ]]; then
-    rm -f "$HOME/.local/bin/sheldon"
-  fi
-  # Sheldon 没有系统级安装，只删用户目录
+  [[ -f "$HOME/.local/bin/sheldon" ]] && rm -f "$HOME/.local/bin/sheldon"
   echo "Sheldon removed."
 fi
 
-# 如果有旧的 zinit 安装残留，也清理
-# （保留 .local/share/zinit，那是正常的 zinit 数据目录）
+# 清理 nvm（已被 fnm 替代）
+if [[ -d "$HOME/.nvm" ]]; then
+  echo "Cleaning up nvm..."
+  rm -rf "$HOME/.nvm"
+  echo "nvm removed."
+fi
+
+# 清理 lsd（已被 eza 替代）
+if command -v lsd >/dev/null 2>&1; then
+  echo "Cleaning up lsd..."
+  [[ -f "$HOME/.local/bin/lsd" ]] && rm -f "$HOME/.local/bin/lsd"
+  rm -rf "$HOME/.config/lsd"
+  echo "lsd removed."
+fi
 
 echo "=== Cleanup done ==="
 {{ end -}}

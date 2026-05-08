@@ -22,10 +22,10 @@ zstyle ':fzf-tab:*' fzf-flags \
 zstyle ':fzf-tab:*' switch-group '<' '>'
 
 zstyle ':fzf-tab:complete:cd:*' \
-  fzf-preview 'lsd --all --color=always --group-dirs=first $realpath'
+  fzf-preview 'eza --all --icons=always --group-directories-first $realpath'
 
 zstyle ':fzf-tab:complete:__zoxide_z:*' \
-  fzf-preview 'lsd --all --color=always --group-dirs=first $realpath'
+  fzf-preview 'eza --all --icons=always --group-directories-first $realpath'
 
 zstyle ':fzf-tab:complete:(rm|trash):*' \
   fzf-preview 'ls -lh $word 2>/dev/null'

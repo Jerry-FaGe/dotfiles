@@ -1,5 +1,5 @@
 # 公开数据 —— 所有机器共享，可安全提交到公开仓库
-# 敏感信息在 private.toml.age 中（加密）
+# 代理敏感信息在 private.toml.age 中（加密）
 
 [packages.common.apt]
 # 基础工具（apt 版本够用的基建软件）
@@ -14,6 +14,7 @@ packages = [
     "wget",
     "git",
     "htop",
+    "btop",
 ]
 
 [packages.wsl.apt]
@@ -32,13 +33,17 @@ packages = [
 # 通过 GitHub release 二进制下载安装的工具（改版本号后 chezmoi apply 自动升级）
 fzf = "0.72.0"
 age = "1.2.0"
-lsd = "1.2.0"
+eza = "0.23.4"
 bat = "0.26.1"
 fd = "10.4.2"
 ripgrep = "15.1.0"
 yazi = "26.5.6"
 lazygit = "0.61.1"
+lazydocker = "0.25.2"
 neovim = "0.12.2"
+fastfetch = "2.62.1"
+fnm = "1.39.0"
+tealdeer = "1.8.1"
 
 # 以下工具通过官方安装脚本安装，自动获取最新版，不锁版本：
 # starship, uv, zoxide, zinit

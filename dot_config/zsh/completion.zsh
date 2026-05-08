@@ -40,7 +40,7 @@ if (( ${+commands[fzf]} )); then
   "
 
   export FZF_ALT_C_OPTS="
-    --preview 'lsd --tree --depth=2 --color=always {}'
+    --preview 'eza --tree --level=2 --icons=always {}'
   "
 
   local fzf_cache="$ZSH_CACHE_DIR/fzf.zsh"

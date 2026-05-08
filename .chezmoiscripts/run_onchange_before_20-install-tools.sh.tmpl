@@ -11,20 +11,19 @@ install_skip()  { echo "  ⊘ $1"; }
 install_fail()  { echo "  ✗ $1 failed: $2"; }
 
 # 版本比较：返回 0=需要安装/升级，1=已是最新
-# 用于 GitHub release 二进制下载（锁版本）
 need_install() {
   local cmd="$1" want="$2"
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    return 0  # 未安装
+    return 0
   fi
   local have
   have=$("$cmd" --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1)
   if [[ "$have" == "$want" ]]; then
     install_skip "$cmd v$have (up to date)"
-    return 1  # 已是最新
+    return 1
   fi
   echo "  ↑ $cmd v${have:-unknown} → v$want"
-  return 0  # 需要升级
+  return 0
 }
 
 #######################################################
@@ -71,7 +70,7 @@ else
 fi
 
 #######################################################
-# GitHub release 二进制（锁版本，改 config.toml 即升级）
+# GitHub release 二进制（锁版本）
 #######################################################
 
 # --- fzf ---
@@ -105,13 +104,13 @@ if need_install "nvim" "$NVIM_VER"; then
     && install_ok "Neovim v${NVIM_VER}" || install_fail "Neovim" "download failed"
 fi
 
-# --- lsd ---
-LSD_VER="{{ .tools.lsd }}"
-if need_install "lsd" "$LSD_VER"; then
-  echo "Installing lsd v${LSD_VER}..."
-  curl -fSL "https://github.com/lsd-rs/lsd/releases/download/v${LSD_VER}/lsd-${LSD_VER}-x86_64-unknown-linux-gnu.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" --strip-components=1 "lsd-${LSD_VER}-x86_64-unknown-linux-gnu/lsd" 2>/dev/null \
-    && install_ok "lsd v${LSD_VER}" || install_fail "lsd" "download/extract failed"
+# --- eza ---
+EZA_VER="{{ .tools.eza }}"
+if need_install "eza" "$EZA_VER"; then
+  echo "Installing eza v${EZA_VER}..."
+  curl -fSL "https://github.com/eza-community/eza/releases/download/v${EZA_VER}/eza_x86_64-unknown-linux-gnu.tar.gz" \
+    | tar xz -C "$HOME/.local/bin" --strip-components=0 ./eza 2>/dev/null \
+    && install_ok "eza v${EZA_VER}" || install_fail "eza" "download/extract failed"
 fi
 
 # --- bat ---
@@ -165,6 +164,49 @@ if need_install "lazygit" "$LAZYGIT_VER"; then
   curl -fSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VER}/lazygit_${LAZYGIT_VER}_Linux_x86_64.tar.gz" \
     | tar xz -C "$HOME/.local/bin" lazygit 2>/dev/null \
     && install_ok "lazygit v${LAZYGIT_VER}" || install_fail "lazygit" "download/extract failed"
+fi
+
+# --- lazydocker ---
+LAZYDOCKER_VER="{{ .tools.lazydocker }}"
+if need_install "lazydocker" "$LAZYDOCKER_VER"; then
+  echo "Installing lazydocker v${LAZYDOCKER_VER}..."
+  curl -fSL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VER}/lazydocker_${LAZYDOCKER_VER}_Linux_x86_64.tar.gz" \
+    | tar xz -C "$HOME/.local/bin" lazydocker 2>/dev/null \
+    && install_ok "lazydocker v${LAZYDOCKER_VER}" || install_fail "lazydocker" "download/extract failed"
+fi
+
+# --- fastfetch ---
+FASTFETCH_VER="{{ .tools.fastfetch }}"
+if need_install "fastfetch" "$FASTFETCH_VER"; then
+  echo "Installing fastfetch v${FASTFETCH_VER}..."
+  _tmp=$(mktemp -d)
+  curl -fSL "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VER}/fastfetch-linux-amd64.tar.gz" \
+    | tar xz -C "$_tmp" 2>/dev/null \
+    && cp "$_tmp/fastfetch-linux-amd64/usr/bin/fastfetch" "$HOME/.local/bin/" \
+    && install_ok "fastfetch v${FASTFETCH_VER}" || install_fail "fastfetch" "download/extract failed"
+  rm -rf "$_tmp"
+fi
+
+# --- fnm ---
+FNM_VER="{{ .tools.fnm }}"
+if need_install "fnm" "$FNM_VER"; then
+  echo "Installing fnm v${FNM_VER}..."
+  _tmp=$(mktemp -d)
+  curl -fSL "https://github.com/Schniz/fnm/releases/download/v${FNM_VER}/fnm-linux.zip" \
+    -o "$_tmp/fnm.zip" 2>/dev/null \
+    && unzip -qo "$_tmp/fnm.zip" -d "$HOME/.local/bin/" fnm \
+    && install_ok "fnm v${FNM_VER}" || install_fail "fnm" "download/extract failed"
+  rm -rf "$_tmp"
+fi
+
+# --- tealdeer (tldr client) ---
+TEALDEER_VER="{{ .tools.tealdeer }}"
+if need_install "tldr" "$TEALDEER_VER"; then
+  echo "Installing tealdeer v${TEALDEER_VER}..."
+  curl -fSL -o "$HOME/.local/bin/tldr" \
+    "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/tealdeer-linux-x86_64-musl" 2>/dev/null \
+    && chmod +x "$HOME/.local/bin/tldr" \
+    && install_ok "tealdeer v${TEALDEER_VER}" || install_fail "tealdeer" "download failed"
 fi
 
 echo ""
