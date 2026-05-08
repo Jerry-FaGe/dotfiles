@@ -49,7 +49,7 @@ zinit light Freed-Wu/fzf-tab-source
 # prompt 出现后立即异步
 #######################################################
 
-zinit ice wait'0' lucid atinit'FAST_HIGHLIGHT[theme]=default'
+zinit ice wait'0' lucid atload'FAST_HIGHLIGHT[theme]=default'
 zinit light zdharma-continuum/fast-syntax-highlighting
 
 # autosuggestions
