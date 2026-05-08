@@ -34,8 +34,21 @@ export VISUAL=nvim
 export SUDO_EDITOR=nvim
 export FCEDIT=nvim
 
-# 让交互式 zsh 也能继承 nvm 的默认 Node 版本。
+#######################################################
+# Lazy NVM
+#######################################################
+
 export NVM_DIR="$HOME/.nvm"
-if (( ! $+functions[nvm] )) && [[ -s "$NVM_DIR/nvm.sh" ]]; then
-  source "$NVM_DIR/nvm.sh"
-fi
+
+_lazy_load_nvm() {
+  unset -f nvm node npm npx pnpm yarn corepack
+  [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+}
+
+for cmd in nvm node npm npx pnpm yarn corepack; do
+  eval "
+  $cmd() {
+    _lazy_load_nvm
+    $cmd \"\$@\"
+  }"
+done

@@ -1,10 +1,41 @@
+#######################################################
 # 仅在交互式 zsh 中加载以下配置。
+#######################################################
+
 [[ -o interactive ]] || return
 
+#######################################################
 # 按顺序加载所有模块
-for f in ~/.config/zsh/*.zsh(N); do
-  source "$f"
-done
+#######################################################
 
+ZSH_CONFIG_DIR="$HOME/.config/zsh"
+
+# 1. 环境变量
+source "$ZSH_CONFIG_DIR/env.zsh"
+
+# 2. shell 基础行为
+source "$ZSH_CONFIG_DIR/options.zsh"
+source "$ZSH_CONFIG_DIR/history.zsh"
+source "$ZSH_CONFIG_DIR/keys.zsh"
+
+# 3. completion（必须在插件前）
+source "$ZSH_CONFIG_DIR/completion.zsh"
+
+# 4. 用户能力扩展
+source "$ZSH_CONFIG_DIR/functions.zsh"
+source "$ZSH_CONFIG_DIR/aliases.zsh"
+
+# 5. 插件
+source "$ZSH_CONFIG_DIR/plugins.zsh"
+
+# 6. prompt（最后）
+source "$ZSH_CONFIG_DIR/prompt.zsh"
+
+# 7. 杂项
+source "$ZSH_CONFIG_DIR/proxy.zsh"
+
+#######################################################
 # 启动通知
+#######################################################
+
 _proxy_startup_notice
