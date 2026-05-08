@@ -31,8 +31,9 @@ zinit ice wait lucid
 zinit light wfxr/forgit
 
 # fast-syntax-highlighting：语法高亮
-zinit ice wait lucid atload'fast-theme base16 >/dev/null 2>&1'
+# 不用 turbo 模式，因为 fast-theme 需要立即可用
 zinit light zdharma-continuum/fast-syntax-highlighting
+autoload -Uz fast-theme 2>/dev/null && fast-theme base16 >/dev/null 2>&1
 
 # zsh-history-substring-search：历史搜索
 zinit ice wait lucid atload'
