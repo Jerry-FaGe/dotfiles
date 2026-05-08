@@ -28,9 +28,7 @@ packages = [
 ]
 
 [tools]
-# 通过官方安装器/二进制下载安装的工具
-# 改版本号后 chezmoi apply 会自动升级
-starship = "1.25.1"
+# 通过 GitHub release 二进制下载安装的工具（改版本号后 chezmoi apply 自动升级）
 fzf = "0.72.0"
 age = "1.2.0"
 lsd = "1.2.0"
@@ -40,3 +38,6 @@ ripgrep = "15.1.0"
 yazi = "26.5.6"
 lazygit = "0.61.1"
 neovim = "0.12.2"
+
+# 以下工具通过官方安装脚本安装，自动获取最新版，不锁版本：
+# starship, uv, zoxide, zinit

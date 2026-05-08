@@ -6,82 +6,39 @@ echo "=== Installing tools via official installers ==="
 
 mkdir -p "$HOME/.local/bin"
 
-# GitHub token（可选，解决 API 限速；没有也能跑）
-GH_AUTH_HEADER=()
-if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-  GH_AUTH_HEADER=(-H "Authorization: Bearer $GITHUB_TOKEN")
-fi
-
 install_ok()    { echo "  ✓ $1"; }
-install_skip()  { echo "  ⊘ $1 (up to date)"; }
+install_skip()  { echo "  ⊘ $1"; }
 install_fail()  { echo "  ✗ $1 failed: $2"; }
 
 # 版本比较：返回 0=需要安装/升级，1=已是最新
-# 用法：need_install <command> <want_version>
+# 用于 GitHub release 二进制下载（锁版本）
 need_install() {
   local cmd="$1" want="$2"
   if ! command -v "$cmd" >/dev/null 2>&1; then
     return 0  # 未安装
   fi
   local have
-  have=$("$cmd" --version 2>/dev/null | grep -oP '[\d]+\.[\d]+\.[\d]+' | head -1)
+  have=$("$cmd" --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1)
   if [[ "$have" == "$want" ]]; then
-    install_skip "$cmd v$have"
+    install_skip "$cmd v$have (up to date)"
     return 1  # 已是最新
   fi
   echo "  ↑ $cmd v${have:-unknown} → v$want"
   return 0  # 需要升级
 }
 
-# 获取 GitHub release 的 latest 版本号（带 token）
-gh_latest_version() {
-  curl -fsSL "${GH_AUTH_HEADER[@]}" \
-    "https://api.github.com/repos/$1/releases/latest" 2>/dev/null \
-    | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/'
-}
-
 #######################################################
-# 工具安装（锁版本，改 config.toml 后自动升级）
+# 官方安装脚本（自动装最新版，只检查是否已装）
 #######################################################
 
 # --- Starship ---
-STARSHIP_VER="{{ .tools.starship }}"
-if need_install "starship" "$STARSHIP_VER"; then
-  echo "Installing Starship v${STARSHIP_VER}..."
+if ! command -v starship >/dev/null 2>&1; then
+  echo "Installing Starship..."
   curl -sS https://starship.rs/install.sh \
     | sh -s -- -y --bin-dir "$HOME/.local/bin" 2>/dev/null \
     && install_ok "Starship" || install_fail "Starship" "install script failed"
-fi
-
-# --- fzf ---
-FZF_VER="{{ .tools.fzf }}"
-if need_install "fzf" "$FZF_VER"; then
-  echo "Installing fzf v${FZF_VER}..."
-  curl -fSL "https://github.com/junegunn/fzf/releases/download/v${FZF_VER}/fzf-${FZF_VER}-linux_amd64.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" fzf 2>/dev/null \
-    && install_ok "fzf" || install_fail "fzf" "download/extract failed"
-fi
-
-# --- age ---
-AGE_VER="{{ .tools.age }}"
-if need_install "age" "$AGE_VER"; then
-  echo "Installing age v${AGE_VER}..."
-  _tmp=$(mktemp -d)
-  curl -fSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VER}/age-v${AGE_VER}-linux-amd64.tar.gz" \
-    | tar xz -C "$_tmp" 2>/dev/null \
-    && cp "$_tmp/age/age" "$_tmp/age/age-keygen" "$HOME/.local/bin/" \
-    && install_ok "age" || install_fail "age" "download/extract failed"
-  rm -rf "$_tmp"
-fi
-
-# --- Neovim ---
-NVIM_VER="{{ .tools.neovim }}"
-if need_install "nvim" "$NVIM_VER"; then
-  echo "Installing Neovim v${NVIM_VER}..."
-  curl -fSL -o "$HOME/.local/bin/nvim" \
-    "https://github.com/neovim/neovim/releases/download/v${NVIM_VER}/nvim-linux-x86_64.appimage" 2>/dev/null \
-    && chmod +x "$HOME/.local/bin/nvim" \
-    && install_ok "Neovim" || install_fail "Neovim" "download failed"
+else
+  install_skip "Starship v$(starship --version 2>/dev/null | head -1 | grep -oP '\d+\.\d+\.\d+')"
 fi
 
 # --- uv ---
@@ -90,7 +47,16 @@ if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null \
     && install_ok "uv" || install_fail "uv" "install script failed"
 else
-  install_skip "uv ($(uv --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1))"
+  install_skip "uv v$(uv --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+')"
+fi
+
+# --- zoxide ---
+if ! command -v zoxide >/dev/null 2>&1; then
+  echo "Installing zoxide..."
+  curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh 2>/dev/null \
+    && install_ok "zoxide" || install_fail "zoxide" "install script failed"
+else
+  install_skip "zoxide v$(zoxide --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+')"
 fi
 
 # --- Zinit ---
@@ -104,13 +70,48 @@ else
   install_skip "Zinit"
 fi
 
+#######################################################
+# GitHub release 二进制（锁版本，改 config.toml 即升级）
+#######################################################
+
+# --- fzf ---
+FZF_VER="{{ .tools.fzf }}"
+if need_install "fzf" "$FZF_VER"; then
+  echo "Installing fzf v${FZF_VER}..."
+  curl -fSL "https://github.com/junegunn/fzf/releases/download/v${FZF_VER}/fzf-${FZF_VER}-linux_amd64.tar.gz" \
+    | tar xz -C "$HOME/.local/bin" fzf 2>/dev/null \
+    && install_ok "fzf v${FZF_VER}" || install_fail "fzf" "download/extract failed"
+fi
+
+# --- age ---
+AGE_VER="{{ .tools.age }}"
+if need_install "age" "$AGE_VER"; then
+  echo "Installing age v${AGE_VER}..."
+  _tmp=$(mktemp -d)
+  curl -fSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VER}/age-v${AGE_VER}-linux-amd64.tar.gz" \
+    | tar xz -C "$_tmp" 2>/dev/null \
+    && cp "$_tmp/age/age" "$_tmp/age/age-keygen" "$HOME/.local/bin/" \
+    && install_ok "age v${AGE_VER}" || install_fail "age" "download/extract failed"
+  rm -rf "$_tmp"
+fi
+
+# --- Neovim ---
+NVIM_VER="{{ .tools.neovim }}"
+if need_install "nvim" "$NVIM_VER"; then
+  echo "Installing Neovim v${NVIM_VER}..."
+  curl -fSL -o "$HOME/.local/bin/nvim" \
+    "https://github.com/neovim/neovim/releases/download/v${NVIM_VER}/nvim-linux-x86_64.appimage" 2>/dev/null \
+    && chmod +x "$HOME/.local/bin/nvim" \
+    && install_ok "Neovim v${NVIM_VER}" || install_fail "Neovim" "download failed"
+fi
+
 # --- lsd ---
 LSD_VER="{{ .tools.lsd }}"
 if need_install "lsd" "$LSD_VER"; then
   echo "Installing lsd v${LSD_VER}..."
   curl -fSL "https://github.com/lsd-rs/lsd/releases/download/v${LSD_VER}/lsd-${LSD_VER}-x86_64-unknown-linux-gnu.tar.gz" \
     | tar xz -C "$HOME/.local/bin" --strip-components=1 "lsd-${LSD_VER}-x86_64-unknown-linux-gnu/lsd" 2>/dev/null \
-    && install_ok "lsd" || install_fail "lsd" "download/extract failed"
+    && install_ok "lsd v${LSD_VER}" || install_fail "lsd" "download/extract failed"
 fi
 
 # --- bat ---
@@ -119,7 +120,7 @@ if need_install "bat" "$BAT_VER"; then
   echo "Installing bat v${BAT_VER}..."
   curl -fSL "https://github.com/sharkdp/bat/releases/download/v${BAT_VER}/bat-v${BAT_VER}-x86_64-unknown-linux-gnu.tar.gz" \
     | tar xz -C "$HOME/.local/bin" --strip-components=1 "bat-v${BAT_VER}-x86_64-unknown-linux-gnu/bat" 2>/dev/null \
-    && install_ok "bat" || install_fail "bat" "download/extract failed"
+    && install_ok "bat v${BAT_VER}" || install_fail "bat" "download/extract failed"
 fi
 
 # --- fd ---
@@ -128,7 +129,7 @@ if need_install "fd" "$FD_VER"; then
   echo "Installing fd v${FD_VER}..."
   curl -fSL "https://github.com/sharkdp/fd/releases/download/v${FD_VER}/fd-v${FD_VER}-x86_64-unknown-linux-gnu.tar.gz" \
     | tar xz -C "$HOME/.local/bin" --strip-components=1 "fd-v${FD_VER}-x86_64-unknown-linux-gnu/fd" 2>/dev/null \
-    && install_ok "fd" || install_fail "fd" "download/extract failed"
+    && install_ok "fd v${FD_VER}" || install_fail "fd" "download/extract failed"
 fi
 
 # --- ripgrep ---
@@ -139,7 +140,7 @@ if need_install "rg" "$RG_VER"; then
   curl -fSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
     | tar xz -C "$_tmp" --strip-components=1 "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg" 2>/dev/null \
     && cp "$_tmp/rg" "$HOME/.local/bin/" \
-    && install_ok "ripgrep" || install_fail "ripgrep" "download/extract failed"
+    && install_ok "ripgrep v${RG_VER}" || install_fail "ripgrep" "download/extract failed"
   rm -rf "$_tmp"
 fi
 
@@ -153,7 +154,7 @@ if need_install "yazi" "$YAZI_VER"; then
     && unzip -qo "$_tmp/yazi.zip" -d "$_tmp" \
     && cp "$_tmp/yazi-x86_64-unknown-linux-gnu/yazi" "$HOME/.local/bin/" \
     && (cp "$_tmp/yazi-x86_64-unknown-linux-gnu/ya" "$HOME/.local/bin/" 2>/dev/null || true) \
-    && install_ok "yazi" || install_fail "yazi" "download/extract failed"
+    && install_ok "yazi v${YAZI_VER}" || install_fail "yazi" "download/extract failed"
   rm -rf "$_tmp"
 fi
 
@@ -163,7 +164,7 @@ if need_install "lazygit" "$LAZYGIT_VER"; then
   echo "Installing lazygit v${LAZYGIT_VER}..."
   curl -fSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VER}/lazygit_${LAZYGIT_VER}_Linux_x86_64.tar.gz" \
     | tar xz -C "$HOME/.local/bin" lazygit 2>/dev/null \
-    && install_ok "lazygit" || install_fail "lazygit" "download/extract failed"
+    && install_ok "lazygit v${LAZYGIT_VER}" || install_fail "lazygit" "download/extract failed"
 fi
 
 echo ""
