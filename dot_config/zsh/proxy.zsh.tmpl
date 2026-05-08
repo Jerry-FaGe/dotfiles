@@ -1,74 +1,71 @@
 #######################################################
-# 代理管理（从 ~/.config/chezmoi/private.toml 读取配置）
+# 代理管理
 #######################################################
 
-_PROXY_SERVER_IP=""
-_PROXY_PORT="7897"
+{{- if eq .machine_type "wsl" }}
 
-# 从 chezmoi 解密的配置文件读取代理信息
-_private_toml="$HOME/.config/chezmoi/private.toml"
-if [[ -f "$_private_toml" ]]; then
-  _ip=$(grep 'server_ip' "$_private_toml" | sed 's/.*"\(.*\)".*/\1/' 2>/dev/null)
-  _port=$(grep 'port' "$_private_toml" | sed 's/.*"\(.*\)".*/\1/' 2>/dev/null)
-  [[ -n "$_ip" ]] && _PROXY_SERVER_IP="$_ip"
-  [[ -n "$_port" ]] && _PROXY_PORT="$_port"
-fi
-
-_wsl_windows_gateway() {
-  local gw
-  gw=$(awk '/^nameserver[[:space:]]+/ { print $2; exit }' /etc/resolv.conf 2>/dev/null)
-  [[ -n "$gw" ]] && print -r -- "$gw"
-}
-
-_proxy_apply() {
-  local proxy_url="$1"
-  export http_proxy="$proxy_url"
-  export https_proxy="$proxy_url"
-  export HTTP_PROXY="$proxy_url"
-  export HTTPS_PROXY="$proxy_url"
-  export ALL_PROXY="$proxy_url"
-  export all_proxy="$proxy_url"
-  export NO_PROXY="localhost,127.0.0.1,::1,.local"
-  export no_proxy="$NO_PROXY"
-}
+# WSL：走 Windows 宿主代理
 
 proxy-on() {
   local gw port proxy_url
 
-  # 如果有配置代理 IP，检测本机是否就是代理服务器
-  if [[ -n "$_PROXY_SERVER_IP" ]]; then
-    if ip addr show 2>/dev/null | grep -q "$_PROXY_SERVER_IP"; then
-      # 本机就是代理服务器，走本地
-      proxy_url="http://127.0.0.1:${_PROXY_PORT}"
-    else
-      # 走远程代理
-      proxy_url="http://${_PROXY_SERVER_IP}:${_PROXY_PORT}"
-    fi
-    _proxy_apply "$proxy_url"
-    print "Proxy On: $proxy_url"
-    return 0
-  fi
-
-  # fallback：WSL 网关自动检测
-  gw=$(_wsl_windows_gateway)
+  gw=$(awk '/^nameserver[[:space:]]+/ { print $2; exit }' /etc/resolv.conf 2>/dev/null)
   if [[ -z "$gw" ]]; then
-    print 'Proxy On failed: no proxy config and unable to detect WSL gateway' >&2
+    print 'Proxy On failed: unable to detect Windows gateway' >&2
     return 1
   fi
 
   for port in 7897 7890 7891; do
     if command -v nc >/dev/null 2>&1 && nc -z -w 1 "$gw" "$port" >/dev/null 2>&1; then
       proxy_url="http://$gw:$port"
-      _proxy_apply "$proxy_url"
+      export http_proxy="$proxy_url" https_proxy="$proxy_url" all_proxy="$proxy_url"
+      export HTTP_PROXY="$proxy_url" HTTPS_PROXY="$proxy_url" ALL_PROXY="$proxy_url"
+      export NO_PROXY="localhost,127.0.0.1,::1,.local" no_proxy="$NO_PROXY"
       print "Proxy On: $proxy_url"
       return 0
     fi
   done
 
   proxy_url="http://$gw:7897"
-  _proxy_apply "$proxy_url"
+  export http_proxy="$proxy_url" https_proxy="$proxy_url" all_proxy="$proxy_url"
+  export HTTP_PROXY="$proxy_url" HTTPS_PROXY="$proxy_url" ALL_PROXY="$proxy_url"
+  export NO_PROXY="localhost,127.0.0.1,::1,.local" no_proxy="$NO_PROXY"
   print "Proxy On: $proxy_url (port auto-detect failed, using default 7897)"
 }
+
+{{- else }}
+
+# 正常 Linux：从 ~/.config/chezmoi/private.toml 读取代理配置
+
+proxy-on() {
+  local cfg="$HOME/.config/chezmoi/private.toml" ip port proxy_url
+
+  if [[ ! -f "$cfg" ]]; then
+    print 'Proxy On failed: ~/.config/chezmoi/private.toml not found' >&2
+    return 1
+  fi
+
+  ip=$(sed -n 's/.*server_ip.*=.*"\(.*\)"/\1/p' "$cfg")
+  port=$(sed -n 's/.*port.*=.*"\(.*\)"/\1/p' "$cfg")
+
+  if [[ -z "$ip" ]]; then
+    print 'Proxy On failed: no server_ip in config' >&2
+    return 1
+  fi
+
+  if ip addr show 2>/dev/null | grep -q "$ip"; then
+    proxy_url="http://127.0.0.1:${port:-7897}"
+  else
+    proxy_url="http://${ip}:${port:-7897}"
+  fi
+
+  export http_proxy="$proxy_url" https_proxy="$proxy_url" all_proxy="$proxy_url"
+  export HTTP_PROXY="$proxy_url" HTTPS_PROXY="$proxy_url" ALL_PROXY="$proxy_url"
+  export NO_PROXY="localhost,127.0.0.1,::1,.local" no_proxy="$NO_PROXY"
+  print "Proxy On: $proxy_url"
+}
+
+{{- end }}
 
 proxy-off() {
   unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY no_proxy
@@ -80,12 +77,11 @@ proxy-status() {
   print "https_proxy=${https_proxy:-<unset>}"
   print "all_proxy=${all_proxy:-<unset>}"
   print "no_proxy=${no_proxy:-<unset>}"
-  print "proxy_server=${_PROXY_SERVER_IP:-<auto-detect>}"
 }
 
 _proxy_startup_notice() {
-  if [[ -n "${http_proxy:-}${HTTP_PROXY:-}${https_proxy:-}${HTTPS_PROXY:-}${all_proxy:-}${ALL_PROXY:-}" ]]; then
-    print -P "%F{6}[proxy]%f 已启用: ${http_proxy:-${HTTP_PROXY:-${https_proxy:-${HTTPS_PROXY:-${all_proxy:-${ALL_PROXY:-<unknown>}}}}}}"
+  if [[ -n "${http_proxy:-}${https_proxy:-}${all_proxy:-}" ]]; then
+    print -P "%F{6}[proxy]%f 已启用: ${http_proxy:-${https_proxy:-${all_proxy:-<unknown>}}}"
   else
     print -P "%F{8}[proxy]%f 未启用（可用 proxy-on / proxy-off / proxy-status）"
   fi
