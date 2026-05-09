@@ -24,6 +24,9 @@ pathappend() {
 pathprepend "$HOME/.local/bin" "$HOME/bin" "$HOME/.bin"
 pathappend "$HOME/.cargo/bin"
 
+# 用户级 zsh 补全目录
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+
 # uv 安装器生成的 env 脚本会补充用户级 PATH。
 if [[ -f "$HOME/.local/bin/env" ]]; then
   source "$HOME/.local/bin/env"
