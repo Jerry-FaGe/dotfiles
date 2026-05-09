@@ -216,6 +216,10 @@ if need_install "tldr" "$TEALDEER_VER"; then
     "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/completions_zsh" 2>/dev/null
 fi
 
+# --- chezmoi zsh 补全 ---
+mkdir -p "$HOME/.local/share/zsh/site-functions"
+chezmoi completion zsh > "$HOME/.local/share/zsh/site-functions/_chezmoi" 2>/dev/null
+
 echo ""
 echo "=== Tools installation done ==="
 {{ end -}}
