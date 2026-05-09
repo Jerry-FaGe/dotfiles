@@ -34,8 +34,10 @@ zstyle ':fzf-tab:complete:(vim|nvim|vi):*' \
   fzf-preview 'bat --color=always --style=numbers --line-range=:500 $word 2>/dev/null || cat $word 2>/dev/null'
 
 zstyle ':fzf-tab:complete:tldr:*' \
-  fzf-preview 'tldr $word --color=always 2>/dev/null' \
-  fzf-flags --preview-window=right,70%
+  fzf-preview 'tldr $word --color=always 2>/dev/null'
+
+zstyle ':fzf-tab:complete:tldr:*' \
+  fzf-flags --height=60% --layout=reverse --border --info=inline-right --preview-window=right,70%
 
 #######################################################
 # Layer 0 - Completion Critical
