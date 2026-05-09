@@ -33,6 +33,9 @@ zstyle ':fzf-tab:complete:(rm|trash):*' \
 zstyle ':fzf-tab:complete:(vim|nvim|vi):*' \
   fzf-preview 'bat --color=always --style=numbers --line-range=:500 $word 2>/dev/null || cat $word 2>/dev/null'
 
+zstyle ':fzf-tab:complete:tldr:*' \
+  fzf-preview 'tldr $word --color=always 2>/dev/null'
+
 #######################################################
 # Layer 0 - Completion Critical
 # 必须尽早加载
