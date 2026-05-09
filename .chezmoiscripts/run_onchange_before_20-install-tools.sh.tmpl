@@ -196,6 +196,9 @@ if need_install "fnm" "$FNM_VER"; then
     -o "$_tmp/fnm.zip" 2>/dev/null \
     && unzip -qo "$_tmp/fnm.zip" -d "$HOME/.local/bin/" fnm \
     && install_ok "fnm v${FNM_VER}" || install_fail "fnm" "download/extract failed"
+  # 生成 zsh 补全
+  mkdir -p "$HOME/.local/share/zsh/site-functions"
+  "$HOME/.local/bin/fnm" completions --shell zsh > "$HOME/.local/share/zsh/site-functions/_fnm" 2>/dev/null
   rm -rf "$_tmp"
 fi
 
