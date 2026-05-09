@@ -207,6 +207,10 @@ if need_install "tldr" "$TEALDEER_VER"; then
     "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/tealdeer-linux-x86_64-musl" 2>/dev/null \
     && chmod +x "$HOME/.local/bin/tldr" \
     && install_ok "tealdeer v${TEALDEER_VER}" || install_fail "tealdeer" "download failed"
+  # 下载 zsh 补全
+  mkdir -p "$HOME/.local/share/zsh/site-functions"
+  curl -fSL -o "$HOME/.local/share/zsh/site-functions/_tldr" \
+    "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/completions_zsh" 2>/dev/null
 fi
 
 echo ""
