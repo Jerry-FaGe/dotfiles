@@ -38,6 +38,10 @@ if command -v lazydocker >/dev/null 2>&1; then
   alias lzd='lazydocker'
 fi
 
+if command -v tldr >/dev/null 2>&1; then
+  alias man='tldr'
+fi
+
 if command -v ip >/dev/null 2>&1; then
   alias iplocal='ip -br -c a'
 fi
