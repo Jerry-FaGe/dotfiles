@@ -1,0 +1,22 @@
+# 这里只追加少量高频按键，不覆盖 Yazi 默认键位。
+
+[mgr]
+prepend_keymap = [
+  # 快速切换隐藏文件显示。
+  { on = ["g", "."], run = "hidden toggle", desc = "切换隐藏文件显示" },
+
+  # 快速回到 Home 目录。
+  { on = ["g", "h"], run = "cd ~", desc = "回到 Home 目录" },
+
+  # 快速进入配置目录，改 dotfiles 时很顺手。
+  { on = ["g", "c"], run = "cd ~/.config", desc = "进入 ~/.config" },
+
+  # 用交互菜单选择 opener，适合第一次摸索 Yazi 的打开方式。
+  { on = ["o", "e"], run = "open --interactive", desc = "选择打开方式" },
+
+  # 用 fd 进入平铺搜索视图，适合在项目里快速扫文件。
+  { on = ["g", "f"], run = 'search --via=fd --args="-d 3"', desc = "平铺查看三层目录" },
+
+  # 用 ripgrep 做内容搜索，适合找代码或配置项。
+  { on = ["g", "r"], run = "search --via=rg", desc = "全文搜索文件内容" },
+]
