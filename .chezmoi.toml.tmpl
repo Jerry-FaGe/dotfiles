@@ -6,5 +6,7 @@ encryption = "age"
     recipient = "age1zm7h53lxqmaczhhdejc07935ula0ym7405mckadxpa9l93dgjc7skrwtek"
 {{ end -}}
 
+{{- $machineType := promptStringOnce . "machine_type" "Machine type (wsl/server/desktop)" "wsl" -}}
+
 [data]
-    machine_type = "wsl"
+    machine_type = {{ $machineType | quote }}
