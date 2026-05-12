@@ -38,6 +38,21 @@ export SUDO_EDITOR=nvim
 export FCEDIT=nvim
 
 #######################################################
+# GitHub API Token
+#######################################################
+
+# GitHub API 客户端通常读取 GITHUB_TOKEN/GH_TOKEN；chezmoi 也支持专用变量。
+if command -v gh >/dev/null 2>&1; then
+  _github_token="$(gh auth token --hostname github.com 2>/dev/null)"
+  if [[ -n "$_github_token" ]]; then
+    export GITHUB_TOKEN="${GITHUB_TOKEN:-$_github_token}"
+    export GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
+    export CHEZMOI_GITHUB_ACCESS_TOKEN="${CHEZMOI_GITHUB_ACCESS_TOKEN:-$GITHUB_TOKEN}"
+  fi
+  unset _github_token
+fi
+
+#######################################################
 # fnm (Fast Node Manager)
 #######################################################
 
