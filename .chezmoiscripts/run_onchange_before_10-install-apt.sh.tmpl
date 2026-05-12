@@ -42,10 +42,11 @@ if [[ ${#MISSING[@]} -eq 0 ]]; then
 else
   echo "Missing packages: ${MISSING[*]}"
   if sudo -n true 2>/dev/null; then
+    sudo apt-get update
     sudo apt-get install -y "${MISSING[@]}"
   else
     echo "WARN: sudo requires password, skipping apt install."
-    echo "Run manually: sudo apt-get install -y ${MISSING[*]}"
+    echo "Run manually: sudo apt-get update && sudo apt-get install -y ${MISSING[*]}"
   fi
 fi
 
