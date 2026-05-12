@@ -3,6 +3,21 @@ README.md
 .gitignore
 LICENSE
 
+# 忽略仓库/编辑器/系统本地文件
+.git/
+.github/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
 # 忽略 chezmoi 内部数据目录（它们会被特殊处理）
 .chezmoidata/
 .chezmoitemplates/
+
+# 防止误纳管本机私钥
+.config/chezmoi/key.txt
+.config/age/**
