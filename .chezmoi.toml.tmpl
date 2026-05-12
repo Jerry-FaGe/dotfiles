@@ -6,7 +6,17 @@ encryption = "age"
     recipient = "age1zm7h53lxqmaczhhdejc07935ula0ym7405mckadxpa9l93dgjc7skrwtek"
 {{ end -}}
 
-{{- $machineType := promptStringOnce . "machine_type" "Machine type (wsl/server/desktop)" "wsl" -}}
+{{- $defaultMachineType := "desktop" -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   $kernelRelease := lower .chezmoi.kernel.osrelease -}}
+{{-   if or (contains "microsoft" $kernelRelease) (contains "wsl" $kernelRelease) -}}
+{{-     $defaultMachineType = "wsl" -}}
+{{-   else -}}
+{{-     $defaultMachineType = "server" -}}
+{{-   end -}}
+{{- end -}}
+{{- $machineTypePrompt := printf "Machine type (wsl/server/desktop), auto-detected: %s" $defaultMachineType -}}
+{{- $machineType := promptStringOnce . "machine_type" $machineTypePrompt $defaultMachineType -}}
 
 [data]
     machine_type = {{ $machineType | quote }}
