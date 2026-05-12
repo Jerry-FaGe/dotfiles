@@ -29,7 +29,7 @@ PACKAGES+=(
 )
 {{- end }}
 
-# 只安装缺失的包（sudo 失败时跳过而非中断）
+# 只安装缺失的包；交互环境会主动获取一次 sudo 凭据。
 MISSING=()
 for pkg in "${PACKAGES[@]}"; do
   if ! dpkg -s "$pkg" &>/dev/null; then
@@ -41,11 +41,11 @@ if [[ ${#MISSING[@]} -eq 0 ]]; then
   echo "All apt packages already installed."
 else
   echo "Missing packages: ${MISSING[*]}"
-  if sudo -n true 2>/dev/null; then
+  if sudo -n true 2>/dev/null || { [[ -t 0 ]] && sudo -v; }; then
     sudo apt-get update
     sudo apt-get install -y "${MISSING[@]}"
   else
-    echo "WARN: sudo requires password, skipping apt install."
+    echo "WARN: sudo is unavailable, skipping apt install."
     echo "Run manually: sudo apt-get update && sudo apt-get install -y ${MISSING[*]}"
   fi
 fi

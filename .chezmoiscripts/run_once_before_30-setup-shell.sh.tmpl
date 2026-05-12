@@ -16,21 +16,22 @@ CURRENT_SHELL=$(getent passwd "$USER" | cut -d: -f7)
 
 if [[ "$CURRENT_SHELL" != "$ZSH_PATH" ]]; then
   echo "Setting default shell to zsh..."
-  # 确保 zsh 在 /etc/shells 中；修改该文件才需要 sudo。
-  if ! grep -qx "$ZSH_PATH" /etc/shells 2>/dev/null; then
-    if sudo -n true 2>/dev/null; then
-      echo "$ZSH_PATH" | sudo tee -a /etc/shells >/dev/null
-    else
-      echo "WARN: sudo requires password, cannot add $ZSH_PATH to /etc/shells."
-      echo "Run manually: echo '$ZSH_PATH' | sudo tee -a /etc/shells"
-    fi
+  if ! sudo -n true 2>/dev/null && ! { [[ -t 0 ]] && sudo -v; }; then
+    echo "WARN: sudo is unavailable, skipping shell setup."
+    echo "Run manually: sudo chsh -s $ZSH_PATH $USER"
+    exit 0
   fi
 
-  if chsh -s "$ZSH_PATH"; then
+  # 确保 zsh 在 /etc/shells 中；修改该文件才需要 sudo。
+  if ! grep -qx "$ZSH_PATH" /etc/shells 2>/dev/null; then
+    echo "$ZSH_PATH" | sudo tee -a /etc/shells >/dev/null
+  fi
+
+  if sudo chsh -s "$ZSH_PATH" "$USER"; then
     echo "Default shell set to zsh. Changes take effect on next login."
   else
     echo "WARN: chsh failed, skipping shell setup."
-    echo "Run manually: chsh -s $ZSH_PATH"
+    echo "Run manually: sudo chsh -s $ZSH_PATH $USER"
   fi
 else
   echo "zsh is already the default shell."
