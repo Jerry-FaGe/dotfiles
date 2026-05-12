@@ -38,4 +38,4 @@ source "$ZSH_CONFIG_DIR/proxy.zsh"
 # 启动通知
 #######################################################
 
-_proxy_startup_notice
+[[ "${ZSH_PROXY_NOTICE:-1}" == "1" ]] && _proxy_startup_notice
