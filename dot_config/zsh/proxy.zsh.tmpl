@@ -35,28 +35,27 @@ proxy-on() {
 
 {{- else }}
 
-# 正常 Linux：从 ~/.config/chezmoi/private.toml 读取代理配置
+# 正常 Linux：从加密下发的 zsh 私有配置读取代理信息
 
 proxy-on() {
-  local cfg="$HOME/.config/chezmoi/private.toml" ip port proxy_url
+  local cfg="$HOME/.config/zsh/proxy.private.zsh" proxy_url
 
   if [[ ! -f "$cfg" ]]; then
-    print 'Proxy On failed: ~/.config/chezmoi/private.toml not found' >&2
+    print 'Proxy On failed: ~/.config/zsh/proxy.private.zsh not found' >&2
     return 1
   fi
 
-  ip=$(sed -n 's/.*server_ip.*=.*"\(.*\)"/\1/p' "$cfg")
-  port=$(sed -n 's/.*port.*=.*"\(.*\)"/\1/p' "$cfg")
+  source "$cfg"
 
-  if [[ -z "$ip" ]]; then
-    print 'Proxy On failed: no server_ip in config' >&2
+  if [[ -z "${PROXY_SERVER_IP:-}" ]]; then
+    print 'Proxy On failed: no PROXY_SERVER_IP in config' >&2
     return 1
   fi
 
-  if ip addr show 2>/dev/null | grep -q "$ip"; then
-    proxy_url="http://127.0.0.1:${port:-7897}"
+  if ip addr show 2>/dev/null | grep -q "$PROXY_SERVER_IP"; then
+    proxy_url="http://127.0.0.1:${PROXY_PORT:-7897}"
   else
-    proxy_url="http://${ip}:${port:-7897}"
+    proxy_url="http://${PROXY_SERVER_IP}:${PROXY_PORT:-7897}"
   fi
 
   export http_proxy="$proxy_url" https_proxy="$proxy_url" all_proxy="$proxy_url"

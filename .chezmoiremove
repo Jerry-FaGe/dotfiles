@@ -1,2 +1,5 @@
 # 当确认 sheldon 完全迁移后取消注释：
 # .config/sheldon
+
+# 代理私密配置已迁移到 ~/.config/zsh/proxy.private.zsh
+.config/chezmoi/private.toml
