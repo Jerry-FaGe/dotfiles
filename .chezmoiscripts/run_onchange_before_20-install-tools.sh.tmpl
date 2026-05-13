@@ -4,6 +4,11 @@ set -uo pipefail
 
 echo "=== Installing tools via official installers ==="
 
+if [[ "{{ .chezmoi.arch }}" != "amd64" ]]; then
+  echo "WARN: tools installer currently supports linux/amd64 only; detected {{ .chezmoi.os }}/{{ .chezmoi.arch }}."
+  exit 0
+fi
+
 mkdir -p "$HOME/.local/bin"
 
 FAILED=()
