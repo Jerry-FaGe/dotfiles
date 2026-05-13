@@ -1,0 +1,24 @@
+FAILED=()
+
+install_ok()    { echo "  ✓ $1"; }
+install_skip()  { echo "  ⊘ $1"; }
+install_fail()  {
+  echo "  ✗ $1 failed: $2"
+  FAILED+=("$1: $2")
+}
+
+# 版本比较：返回 0=需要安装/升级，1=已是最新
+need_install() {
+  local cmd="$1" want="$2"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    return 0
+  fi
+  local have
+  have=$("$cmd" --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1)
+  if [[ "$have" == "$want" ]]; then
+    install_skip "$cmd v$have (up to date)"
+    return 1
+  fi
+  echo "  ↑ $cmd v${have:-unknown} → v$want"
+  return 0
+}
