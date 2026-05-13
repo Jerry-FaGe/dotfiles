@@ -1,0 +1,62 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -uo pipefail
+
+echo "=== Installing core tools via official installers ==="
+
+mkdir -p "$HOME/.local/bin"
+
+{{ includeTemplate "install-tools-functions.sh.tmpl" . }}
+
+#######################################################
+# 官方安装脚本（自动装最新版，只检查是否已装）
+#######################################################
+
+# --- Starship ---
+if ! command -v starship >/dev/null 2>&1; then
+  echo "Installing Starship..."
+  curl -sS https://starship.rs/install.sh \
+    | sh -s -- -y --bin-dir "$HOME/.local/bin" 2>/dev/null \
+    && install_ok "Starship" || install_fail "Starship" "install script failed"
+else
+  install_skip "Starship v$(starship --version 2>/dev/null | head -1 | grep -oP '\d+\.\d+\.\d+')"
+fi
+
+# --- uv ---
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null \
+    && install_ok "uv" || install_fail "uv" "install script failed"
+else
+  install_skip "uv v$(uv --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+')"
+fi
+
+# --- zoxide ---
+if ! command -v zoxide >/dev/null 2>&1; then
+  echo "Installing zoxide..."
+  curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh 2>/dev/null \
+    && install_ok "zoxide" || install_fail "zoxide" "install script failed"
+else
+  install_skip "zoxide v$(zoxide --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+')"
+fi
+
+# --- Zinit ---
+ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
+if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
+  echo "Installing Zinit..."
+  mkdir -p "$(dirname "$ZINIT_HOME")"
+  git clone --depth 1 https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME" 2>/dev/null \
+    && install_ok "Zinit" || install_fail "Zinit" "git clone failed"
+else
+  install_skip "Zinit"
+fi
+
+echo ""
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+  echo "=== Core tools installation failed ==="
+  printf '  - %s\n' "${FAILED[@]}"
+  exit 1
+fi
+
+echo "=== Core tools installation done ==="
+{{ end -}}
