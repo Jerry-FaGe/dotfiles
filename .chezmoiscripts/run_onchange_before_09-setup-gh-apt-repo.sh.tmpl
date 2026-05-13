@@ -1,0 +1,28 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+echo "=== Setting up GitHub CLI apt repository ==="
+
+if [[ ! -r /etc/apt/keyrings/githubcli-archive-keyring.gpg || ! -r /etc/apt/sources.list.d/github-cli.list ]]; then
+  if sudo -n true 2>/dev/null || { [[ -t 0 ]] && sudo -v; }; then
+    sudo mkdir -p -m 755 /etc/apt/keyrings /etc/apt/sources.list.d
+
+    tmp_key=$(mktemp)
+    wget -nv -O "$tmp_key" https://cli.github.com/packages/githubcli-archive-keyring.gpg
+    cat "$tmp_key" | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+    rm -f "$tmp_key"
+
+    sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+  else
+    echo "WARN: sudo is unavailable, skipping GitHub CLI apt repository setup."
+    echo "Run manually: https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian"
+  fi
+else
+  echo "GitHub CLI apt repository already configured."
+fi
+
+echo "=== GitHub CLI apt repository done ==="
+{{ end -}}

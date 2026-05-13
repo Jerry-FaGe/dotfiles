@@ -1,0 +1,29 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+echo "=== Checking GitHub CLI authentication ==="
+
+if ! command -v gh >/dev/null 2>&1; then
+  echo "gh not found, skipping GitHub CLI authentication check."
+  exit 0
+fi
+
+if gh auth status --hostname github.com >/dev/null 2>&1; then
+  echo "GitHub CLI already authenticated."
+  exit 0
+fi
+
+if [[ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ]]; then
+  token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+  if printf '%s\n' "$token" | gh auth login --hostname github.com --with-token; then
+    gh auth setup-git --hostname github.com || true
+    echo "GitHub CLI authenticated from GH_TOKEN/GITHUB_TOKEN."
+    exit 0
+  fi
+fi
+
+echo "GitHub CLI is not authenticated."
+echo "Run manually: gh auth login --hostname github.com --git-protocol ssh --web"
+echo "Then run: gh auth setup-git --hostname github.com"
+{{ end -}}

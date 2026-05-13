@@ -13,6 +13,7 @@ packages = [
     "curl",
     "wget",
     "git",
+    "gh",
     "htop",
     "btop",
 ]
