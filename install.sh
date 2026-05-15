@@ -5,24 +5,64 @@ repo="${CHEZMOI_REPO:-https://github.com/Jerry-FaGe/dotfiles.git}"
 mode="--apply"
 age_key_path="${CHEZMOI_AGE_KEY_PATH:-$HOME/.config/chezmoi/key.txt}"
 age_key_file="${CHEZMOI_AGE_KEY_FILE:-}"
+machine_type="${CHEZMOI_MACHINE_TYPE:-}"
+chezmoi_global_args=()
 
 usage() {
   cat <<'EOF'
-Usage: ./install.sh [--one-shot|--no-apply] [--repo URL] [--age-key-file PATH]
+Usage: ./install.sh [--one-shot|--no-apply|--dry-run] [--repo URL] [--age-key-file PATH] [--machine-type TYPE]
 
 Options:
   --one-shot     Apply dotfiles, then remove chezmoi's source/config state.
   --no-apply     Run chezmoi init only; do not apply dotfiles yet.
+  --dry-run      Run chezmoi in dry-run mode.
   --repo URL     Override the dotfiles repository URL.
   --age-key-file PATH
                  Copy an existing age identity to ~/.config/chezmoi/key.txt.
+  --machine-type TYPE
+                 Set machine type for templates: wsl, server, or desktop.
   -h, --help     Show this help.
 
 Environment:
   CHEZMOI_REPO           Default repository URL when --repo is not provided.
   CHEZMOI_AGE_KEY_FILE   Path to an existing age identity file.
   CHEZMOI_AGE_KEY_PATH   Destination path for the age identity file.
+  CHEZMOI_MACHINE_TYPE   Machine type for templates: wsl, server, or desktop.
 EOF
+}
+
+detect_machine_type() {
+  if [[ -n "$machine_type" ]]; then
+    case "$machine_type" in
+      wsl|server|desktop)
+        printf '%s\n' "$machine_type"
+        return 0
+        ;;
+      *)
+        echo "ERROR: machine type must be one of: wsl, server, desktop" >&2
+        exit 2
+        ;;
+    esac
+  fi
+
+  if [[ "$(uname -s)" != "Linux" ]]; then
+    printf 'desktop\n'
+    return 0
+  fi
+
+  local kernel_release=""
+  kernel_release="$(uname -r | tr '[:upper:]' '[:lower:]')"
+  if [[ "$kernel_release" == *microsoft* || "$kernel_release" == *wsl* ]]; then
+    printf 'wsl\n'
+    return 0
+  fi
+
+  if [[ -n "${XDG_CURRENT_DESKTOP:-}" || -n "${DESKTOP_SESSION:-}" ]]; then
+    printf 'desktop\n'
+    return 0
+  fi
+
+  printf 'server\n'
 }
 
 install_age_key_file() {
@@ -119,6 +159,16 @@ EOF
   exit 1
 }
 
+run_chezmoi() {
+  if command -v chezmoi >/dev/null 2>&1; then
+    exec chezmoi "${chezmoi_global_args[@]}" "${args[@]}"
+  fi
+
+  mkdir -p "$HOME/.local/bin"
+  sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$HOME/.local/bin"
+  exec "$HOME/.local/bin/chezmoi" "${chezmoi_global_args[@]}" "${args[@]}"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --one-shot)
@@ -127,6 +177,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-apply)
       mode=""
+      shift
+      ;;
+    --dry-run)
+      chezmoi_global_args+=(--dry-run)
       shift
       ;;
     --repo)
@@ -143,6 +197,14 @@ while [[ $# -gt 0 ]]; do
         exit 2
       fi
       age_key_file="$2"
+      shift 2
+      ;;
+    --machine-type)
+      if [[ $# -lt 2 || -z "$2" ]]; then
+        echo "ERROR: --machine-type requires one of: wsl, server, desktop" >&2
+        exit 2
+      fi
+      machine_type="$2"
       shift 2
       ;;
     -h|--help)
@@ -171,8 +233,8 @@ args=(init)
 if [[ -n "$mode" ]]; then
   args+=("$mode")
 fi
-args+=("$repo")
+args+=(--promptDefaults --promptString "machine_type=$(detect_machine_type)" "$repo")
 
 ensure_age_key
 
-exec sh -c "$(curl -fsLS https://get.chezmoi.io)" -- "${args[@]}"
+run_chezmoi

@@ -30,7 +30,7 @@ curl -fsSL https://raw.githubusercontent.com/Jerry-FaGe/dotfiles/main/install.sh
 curl -fsSL https://raw.githubusercontent.com/Jerry-FaGe/dotfiles/main/install.sh | bash -s -- --age-key-file /path/to/key.txt
 ```
 
-`install.sh` 是对官方 `get.chezmoi.io` 的薄封装，支持 `--one-shot`（临时环境）、`--no-apply`（仅克隆不部署）、`--repo URL` 和 `--age-key-file PATH`。
+`install.sh` 会优先复用系统已有的 `chezmoi`；如果不存在，则通过官方 installer 安装到 `~/.local/bin`。它支持 `--one-shot`（临时环境）、`--no-apply`（仅克隆不部署）、`--dry-run`（预演）、`--repo URL`、`--age-key-file PATH` 和 `--machine-type wsl|server|desktop`。
 
 ### 方式二：直接使用 chezmoi
 
@@ -112,6 +112,12 @@ zsh 配置拆成独立模块，由 `dot_zshrc.tmpl` 按顺序 source：
 首次 `chezmoi init` 时通过 `promptStringOnce` 确认，之后记住选择。
 
 模板中按 `machine_type` 分支处理差异（apt 包、代理方式等）。
+
+通过 `install.sh` 部署时，脚本会把自动检测结果传给 chezmoi，避免在管道或无 TTY 环境中卡在模板提示。需要手动指定时使用：
+
+```bash
+./install.sh --machine-type server
+```
 
 ## 目录结构
 
