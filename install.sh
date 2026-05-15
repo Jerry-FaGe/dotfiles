@@ -12,9 +12,43 @@ selected_machine_type=""
 print_banner() {
   cat <<'EOF'
 
-dotfiles installer
-==================
+    ____        __  _____ __
+   / __ \____  / /_/ __(_) /__  _____
+  / / / / __ \/ __/ /_/ / / _ \/ ___/
+ / /_/ / /_/ / /_/ __/ / /  __(__  )
+/_____/\____/\__/_/ /_/_/\___/____/
+
+        chezmoi-powered workstation bootstrap
 EOF
+}
+
+print_summary() {
+  local action="apply"
+  local dry_run="no"
+
+  case "$mode" in
+    --one-shot) action="one-shot" ;;
+    "") action="init only" ;;
+  esac
+
+  if [[ ${#chezmoi_global_args[@]} -gt 0 ]]; then
+    dry_run="yes"
+  fi
+
+  cat <<EOF
+
+Configuration
+-------------
+repo         : $repo
+action       : $action
+dry-run      : $dry_run
+machine type : $selected_machine_type
+age key      : $age_key_path
+EOF
+
+  if [[ -n "$age_key_file" ]]; then
+    printf 'age source   : %s\n' "$age_key_file"
+  fi
 }
 
 info() {
@@ -193,8 +227,6 @@ EOF
 
 run_chezmoi() {
   step "Running chezmoi"
-  info "repository: $repo"
-  info "machine type: $selected_machine_type"
   if [[ ${#chezmoi_global_args[@]} -gt 0 ]]; then
     info "global args: ${chezmoi_global_args[*]}"
   fi
@@ -273,16 +305,18 @@ if ! command -v git >/dev/null 2>&1; then
 fi
 
 print_banner
-step "Checking prerequisites"
-ok "curl: $(command -v curl)"
-ok "git: $(command -v git)"
-
 args=(init)
 if [[ -n "$mode" ]]; then
   args+=("$mode")
 fi
 selected_machine_type="$(detect_machine_type)"
 args+=(--promptDefaults --promptString "machine_type=$selected_machine_type" "$repo")
+
+print_summary
+
+step "Checking prerequisites"
+ok "curl: $(command -v curl)"
+ok "git: $(command -v git)"
 
 ensure_age_key
 
