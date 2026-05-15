@@ -30,7 +30,7 @@ curl -fsSL https://raw.githubusercontent.com/Jerry-FaGe/dotfiles/main/install.sh
 curl -fsSL https://raw.githubusercontent.com/Jerry-FaGe/dotfiles/main/install.sh | bash -s -- --age-key-file /path/to/key.txt
 ```
 
-`install.sh` 会优先复用系统已有的 `chezmoi`；如果不存在，则通过官方 installer 安装到 `~/.local/bin`。它支持 `--one-shot`（临时环境）、`--no-apply`（仅克隆不部署）、`--dry-run`（预演）、`--repo URL`、`--age-key-file PATH` 和 `--machine-type wsl|server|desktop`。
+`install.sh` 会输出分阶段状态，优先复用系统已有的 `chezmoi`；如果不存在，则通过官方 installer 安装到 `~/.local/bin`。它支持 `--one-shot`（临时环境）、`--no-apply`（仅克隆不部署）、`--dry-run`（预演）、`--repo URL`、`--age-key-file PATH` 和 `--machine-type wsl|server|desktop`。
 
 ### 方式二：直接使用 chezmoi
 
