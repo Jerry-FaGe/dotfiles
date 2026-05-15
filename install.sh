@@ -3,20 +3,120 @@ set -euo pipefail
 
 repo="${CHEZMOI_REPO:-https://github.com/Jerry-FaGe/dotfiles.git}"
 mode="--apply"
+age_key_path="${CHEZMOI_AGE_KEY_PATH:-$HOME/.config/chezmoi/key.txt}"
+age_key_file="${CHEZMOI_AGE_KEY_FILE:-}"
 
 usage() {
   cat <<'EOF'
-Usage: ./install.sh [--one-shot|--no-apply] [--repo URL]
+Usage: ./install.sh [--one-shot|--no-apply] [--repo URL] [--age-key-file PATH]
 
 Options:
   --one-shot     Apply dotfiles, then remove chezmoi's source/config state.
   --no-apply     Run chezmoi init only; do not apply dotfiles yet.
   --repo URL     Override the dotfiles repository URL.
+  --age-key-file PATH
+                 Copy an existing age identity to ~/.config/chezmoi/key.txt.
   -h, --help     Show this help.
 
 Environment:
-  CHEZMOI_REPO   Default repository URL when --repo is not provided.
+  CHEZMOI_REPO           Default repository URL when --repo is not provided.
+  CHEZMOI_AGE_KEY_FILE   Path to an existing age identity file.
+  CHEZMOI_AGE_KEY_PATH   Destination path for the age identity file.
 EOF
+}
+
+install_age_key_file() {
+  local source_path="$1"
+
+  if [[ ! -f "$source_path" ]]; then
+    echo "ERROR: age key file does not exist: $source_path" >&2
+    exit 1
+  fi
+
+  mkdir -p "$(dirname "$age_key_path")"
+  if [[ "$(realpath -m "$source_path")" == "$(realpath -m "$age_key_path")" ]]; then
+    chmod 600 "$age_key_path"
+    echo "Using existing age identity: $age_key_path"
+    return 0
+  fi
+
+  install -m 600 "$source_path" "$age_key_path"
+  echo "Installed age identity: $age_key_path"
+}
+
+prompt_for_age_key() {
+  if [[ ! -r /dev/tty ]]; then
+    return 1
+  fi
+
+  local answer=""
+  printf 'age identity not found at %s. Paste it now? [y/N] ' "$age_key_path" >/dev/tty
+  read -r answer </dev/tty
+
+  case "$answer" in
+    y|Y|yes|YES)
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  local key=""
+  local tty_state=""
+  tty_state="$(stty -g </dev/tty)"
+  printf 'Paste AGE-SECRET-KEY line: ' >/dev/tty
+  stty -echo </dev/tty
+  if ! read -r key </dev/tty; then
+    stty "$tty_state" </dev/tty
+    return 1
+  fi
+  stty "$tty_state" </dev/tty
+  printf '\n' >/dev/tty
+
+  if [[ ! "$key" == AGE-SECRET-KEY-* ]]; then
+    echo "ERROR: pasted value does not look like an age identity." >&2
+    exit 1
+  fi
+
+  mkdir -p "$(dirname "$age_key_path")"
+  umask 077
+  printf '%s\n' "$key" >"$age_key_path"
+  chmod 600 "$age_key_path"
+  echo "Installed age identity: $age_key_path"
+}
+
+ensure_age_key() {
+  if [[ -f "$age_key_path" ]]; then
+    chmod 600 "$age_key_path"
+    return 0
+  fi
+
+  if [[ -n "$age_key_file" ]]; then
+    install_age_key_file "$age_key_file"
+    return 0
+  fi
+
+  if prompt_for_age_key; then
+    return 0
+  fi
+
+  if [[ -z "$mode" ]]; then
+    cat >&2 <<EOF
+WARN: age identity was not configured.
+Run with --age-key-file PATH or create $age_key_path before chezmoi apply.
+EOF
+    return 0
+  fi
+
+  cat >&2 <<EOF
+ERROR: age identity is required before applying encrypted files.
+
+Options:
+  ./install.sh --age-key-file /path/to/key.txt
+  CHEZMOI_AGE_KEY_FILE=/path/to/key.txt ./install.sh
+  install -m 600 /path/to/key.txt $age_key_path
+EOF
+  exit 1
 }
 
 while [[ $# -gt 0 ]]; do
@@ -35,6 +135,14 @@ while [[ $# -gt 0 ]]; do
         exit 2
       fi
       repo="$2"
+      shift 2
+      ;;
+    --age-key-file)
+      if [[ $# -lt 2 || -z "$2" ]]; then
+        echo "ERROR: --age-key-file requires a path" >&2
+        exit 2
+      fi
+      age_key_file="$2"
       shift 2
       ;;
     -h|--help)
@@ -65,25 +173,6 @@ if [[ -n "$mode" ]]; then
 fi
 args+=("$repo")
 
-if [[ ! -f "$HOME/.config/chezmoi/key.txt" ]]; then
-  cat >&2 <<'EOF'
-WARN: age identity not found at ~/.config/chezmoi/key.txt.
-Encrypted files require this key before apply can fully succeed.
-
-Prepare it with:
-  mkdir -p ~/.config/chezmoi
-  install -m 600 /path/to/key.txt ~/.config/chezmoi/key.txt
-
-Or paste a key manually:
-  mkdir -p ~/.config/chezmoi
-  umask 077
-  cat > ~/.config/chezmoi/key.txt
-
-Then rerun:
-EOF
-  printf '  sh -c "$(curl -fsLS https://get.chezmoi.io)" --' >&2
-  printf ' %q' "${args[@]}" >&2
-  printf '\n' >&2
-fi
+ensure_age_key
 
 exec sh -c "$(curl -fsLS https://get.chezmoi.io)" -- "${args[@]}"

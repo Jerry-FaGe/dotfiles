@@ -20,16 +20,17 @@
 ### 方式一：使用 install.sh（推荐）
 
 ```bash
-# 1. 安放 age 密钥（必须先做，apply 时需要解密）
-mkdir -p ~/.config/chezmoi
-echo "AGE-SECRET-KEY-xxxxx" > ~/.config/chezmoi/key.txt
-chmod 600 ~/.config/chezmoi/key.txt
-
-# 2. 下载并执行安装脚本
+# 下载并执行安装脚本；如果缺少 age key，脚本会交互提示粘贴
 curl -fsSL https://raw.githubusercontent.com/Jerry-FaGe/dotfiles/main/install.sh | bash
 ```
 
-`install.sh` 是对官方 `get.chezmoi.io` 的薄封装，支持 `--one-shot`（临时环境）和 `--no-apply`（仅克隆不部署）。
+已有 age key 文件时可以直接传入，适合自动化部署：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Jerry-FaGe/dotfiles/main/install.sh | bash -s -- --age-key-file /path/to/key.txt
+```
+
+`install.sh` 是对官方 `get.chezmoi.io` 的薄封装，支持 `--one-shot`（临时环境）、`--no-apply`（仅克隆不部署）、`--repo URL` 和 `--age-key-file PATH`。
 
 ### 方式二：直接使用 chezmoi
 
@@ -40,7 +41,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply Jerry-FaGe/dotfiles
 > **前提条件**：
 > - `git` 和 `curl`（大部分发行版预装，如果没有：`sudo apt install git curl`）
 > - **仅支持 Debian/Ubuntu amd64**：安装脚本使用 apt + 硬编码 amd64 下载链接
-> - 首次部署需要 age 密钥（见"故障排除"）
+> - 首次 apply 需要 age 密钥；使用 `install.sh` 时会自动引导配置
 
 ## 工具清单
 
@@ -182,6 +183,14 @@ chezmoi cd                                # 进入源码目录
 ## 故障排除
 
 **age 解密错误**
+
+使用 `install.sh` 时推荐直接让脚本配置密钥：
+
+```bash
+./install.sh --age-key-file /path/to/key.txt
+```
+
+也可以手动检查：
 
 ```bash
 # 检查密钥是否存在且格式正确
