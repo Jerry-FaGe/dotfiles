@@ -23,8 +23,9 @@ mkdir -p "$HOME/.local/bin"
 FZF_VER="{{ .tools.fzf }}"
 if need_install "fzf" "$FZF_VER"; then
   info "Installing fzf v${FZF_VER}"
-  curl -fSL "https://github.com/junegunn/fzf/releases/download/v${FZF_VER}/fzf-${FZF_VER}-linux_amd64.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" fzf 2>/dev/null \
+  install_tar_member "fzf" "$FZF_VER" \
+    "https://github.com/junegunn/fzf/releases/download/v${FZF_VER}/fzf-${FZF_VER}-linux_amd64.tar.gz" \
+    "fzf-${FZF_VER}-linux_amd64.tar.gz" "fzf" "fzf" \
     && install_ok "fzf v${FZF_VER}" || install_fail "fzf" "download/extract failed"
 fi
 
@@ -32,10 +33,13 @@ fi
 AGE_VER="{{ .tools.age }}"
 if need_install "age" "$AGE_VER"; then
   info "Installing age v${AGE_VER}"
+  _archive=$(download_cached "age" "$AGE_VER" \
+    "https://github.com/FiloSottile/age/releases/download/v${AGE_VER}/age-v${AGE_VER}-linux-amd64.tar.gz" \
+    "age-v${AGE_VER}-linux-amd64.tar.gz")
   _tmp=$(mktemp -d)
-  curl -fSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VER}/age-v${AGE_VER}-linux-amd64.tar.gz" \
-    | tar xz -C "$_tmp" 2>/dev/null \
-    && cp "$_tmp/age/age" "$_tmp/age/age-keygen" "$HOME/.local/bin/" \
+  tar xzf "$_archive" -C "$_tmp" 2>/dev/null \
+    && install_binary "$_tmp/age/age" "age" \
+    && install_binary "$_tmp/age/age-keygen" "age-keygen" \
     && install_ok "age v${AGE_VER}" || install_fail "age" "download/extract failed"
   rm -rf "$_tmp"
 fi
@@ -44,9 +48,9 @@ fi
 NVIM_VER="{{ .tools.neovim }}"
 if need_install "nvim" "$NVIM_VER"; then
   info "Installing Neovim v${NVIM_VER}"
-  curl -fSL -o "$HOME/.local/bin/nvim" \
-    "https://github.com/neovim/neovim/releases/download/v${NVIM_VER}/nvim-linux-x86_64.appimage" 2>/dev/null \
-    && chmod +x "$HOME/.local/bin/nvim" \
+  install_file_binary "Neovim" "$NVIM_VER" \
+    "https://github.com/neovim/neovim/releases/download/v${NVIM_VER}/nvim-linux-x86_64.appimage" \
+    "nvim-${NVIM_VER}-linux-x86_64.appimage" "nvim" \
     && install_ok "Neovim v${NVIM_VER}" || install_fail "Neovim" "download failed"
 fi
 
@@ -54,8 +58,9 @@ fi
 EZA_VER="{{ .tools.eza }}"
 if need_install "eza" "$EZA_VER"; then
   info "Installing eza v${EZA_VER}"
-  curl -fSL "https://github.com/eza-community/eza/releases/download/v${EZA_VER}/eza_x86_64-unknown-linux-gnu.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" --strip-components=0 ./eza 2>/dev/null \
+  install_tar_member "eza" "$EZA_VER" \
+    "https://github.com/eza-community/eza/releases/download/v${EZA_VER}/eza_x86_64-unknown-linux-gnu.tar.gz" \
+    "eza-${EZA_VER}-x86_64-unknown-linux-gnu.tar.gz" "./eza" "eza" \
     && install_ok "eza v${EZA_VER}" || install_fail "eza" "download/extract failed"
 fi
 
@@ -63,8 +68,9 @@ fi
 BAT_VER="{{ .tools.bat }}"
 if need_install "bat" "$BAT_VER"; then
   info "Installing bat v${BAT_VER}"
-  curl -fSL "https://github.com/sharkdp/bat/releases/download/v${BAT_VER}/bat-v${BAT_VER}-x86_64-unknown-linux-gnu.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" --strip-components=1 "bat-v${BAT_VER}-x86_64-unknown-linux-gnu/bat" 2>/dev/null \
+  install_tar_member "bat" "$BAT_VER" \
+    "https://github.com/sharkdp/bat/releases/download/v${BAT_VER}/bat-v${BAT_VER}-x86_64-unknown-linux-gnu.tar.gz" \
+    "bat-v${BAT_VER}-x86_64-unknown-linux-gnu.tar.gz" "bat-v${BAT_VER}-x86_64-unknown-linux-gnu/bat" "bat" \
     && install_ok "bat v${BAT_VER}" || install_fail "bat" "download/extract failed"
 fi
 
@@ -72,8 +78,9 @@ fi
 FD_VER="{{ .tools.fd }}"
 if need_install "fd" "$FD_VER"; then
   info "Installing fd v${FD_VER}"
-  curl -fSL "https://github.com/sharkdp/fd/releases/download/v${FD_VER}/fd-v${FD_VER}-x86_64-unknown-linux-gnu.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" --strip-components=1 "fd-v${FD_VER}-x86_64-unknown-linux-gnu/fd" 2>/dev/null \
+  install_tar_member "fd" "$FD_VER" \
+    "https://github.com/sharkdp/fd/releases/download/v${FD_VER}/fd-v${FD_VER}-x86_64-unknown-linux-gnu.tar.gz" \
+    "fd-v${FD_VER}-x86_64-unknown-linux-gnu.tar.gz" "fd-v${FD_VER}-x86_64-unknown-linux-gnu/fd" "fd" \
     && install_ok "fd v${FD_VER}" || install_fail "fd" "download/extract failed"
 fi
 
@@ -81,24 +88,23 @@ fi
 RG_VER="{{ .tools.ripgrep }}"
 if need_install "rg" "$RG_VER"; then
   info "Installing ripgrep v${RG_VER}"
-  _tmp=$(mktemp -d)
-  curl -fSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
-    | tar xz -C "$_tmp" --strip-components=1 "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg" 2>/dev/null \
-    && cp "$_tmp/rg" "$HOME/.local/bin/" \
+  install_tar_member "ripgrep" "$RG_VER" \
+    "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
+    "ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg" "rg" \
     && install_ok "ripgrep v${RG_VER}" || install_fail "ripgrep" "download/extract failed"
-  rm -rf "$_tmp"
 fi
 
 # --- yazi ---
 YAZI_VER="{{ .tools.yazi }}"
 if need_install "yazi" "$YAZI_VER"; then
   info "Installing yazi v${YAZI_VER}"
+  _archive=$(download_cached "yazi" "$YAZI_VER" \
+    "https://github.com/sxyazi/yazi/releases/download/v${YAZI_VER}/yazi-x86_64-unknown-linux-gnu.zip" \
+    "yazi-${YAZI_VER}-x86_64-unknown-linux-gnu.zip")
   _tmp=$(mktemp -d)
-  curl -fSL "https://github.com/sxyazi/yazi/releases/download/v${YAZI_VER}/yazi-x86_64-unknown-linux-gnu.zip" \
-    -o "$_tmp/yazi.zip" 2>/dev/null \
-    && unzip -qo "$_tmp/yazi.zip" -d "$_tmp" \
-    && cp "$_tmp/yazi-x86_64-unknown-linux-gnu/yazi" "$HOME/.local/bin/" \
-    && (cp "$_tmp/yazi-x86_64-unknown-linux-gnu/ya" "$HOME/.local/bin/" 2>/dev/null || true) \
+  unzip -qo "$_archive" -d "$_tmp" \
+    && install_binary "$_tmp/yazi-x86_64-unknown-linux-gnu/yazi" "yazi" \
+    && (install_binary "$_tmp/yazi-x86_64-unknown-linux-gnu/ya" "ya" 2>/dev/null || true) \
     && install_ok "yazi v${YAZI_VER}" || install_fail "yazi" "download/extract failed"
   rm -rf "$_tmp"
 fi
@@ -107,8 +113,9 @@ fi
 LAZYGIT_VER="{{ .tools.lazygit }}"
 if need_install "lazygit" "$LAZYGIT_VER"; then
   info "Installing lazygit v${LAZYGIT_VER}"
-  curl -fSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VER}/lazygit_${LAZYGIT_VER}_Linux_x86_64.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" lazygit 2>/dev/null \
+  install_tar_member "lazygit" "$LAZYGIT_VER" \
+    "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VER}/lazygit_${LAZYGIT_VER}_Linux_x86_64.tar.gz" \
+    "lazygit_${LAZYGIT_VER}_Linux_x86_64.tar.gz" "lazygit" "lazygit" \
     && install_ok "lazygit v${LAZYGIT_VER}" || install_fail "lazygit" "download/extract failed"
 fi
 
@@ -116,8 +123,9 @@ fi
 LAZYDOCKER_VER="{{ .tools.lazydocker }}"
 if need_install "lazydocker" "$LAZYDOCKER_VER"; then
   info "Installing lazydocker v${LAZYDOCKER_VER}"
-  curl -fSL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VER}/lazydocker_${LAZYDOCKER_VER}_Linux_x86_64.tar.gz" \
-    | tar xz -C "$HOME/.local/bin" lazydocker 2>/dev/null \
+  install_tar_member "lazydocker" "$LAZYDOCKER_VER" \
+    "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VER}/lazydocker_${LAZYDOCKER_VER}_Linux_x86_64.tar.gz" \
+    "lazydocker_${LAZYDOCKER_VER}_Linux_x86_64.tar.gz" "lazydocker" "lazydocker" \
     && install_ok "lazydocker v${LAZYDOCKER_VER}" || install_fail "lazydocker" "download/extract failed"
 fi
 
@@ -125,10 +133,12 @@ fi
 FASTFETCH_VER="{{ .tools.fastfetch }}"
 if need_install "fastfetch" "$FASTFETCH_VER"; then
   info "Installing fastfetch v${FASTFETCH_VER}"
+  _archive=$(download_cached "fastfetch" "$FASTFETCH_VER" \
+    "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VER}/fastfetch-linux-amd64.tar.gz" \
+    "fastfetch-${FASTFETCH_VER}-linux-amd64.tar.gz")
   _tmp=$(mktemp -d)
-  curl -fSL "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VER}/fastfetch-linux-amd64.tar.gz" \
-    | tar xz -C "$_tmp" 2>/dev/null \
-    && cp "$_tmp/fastfetch-linux-amd64/usr/bin/fastfetch" "$HOME/.local/bin/" \
+  tar xzf "$_archive" -C "$_tmp" 2>/dev/null \
+    && install_binary "$_tmp/fastfetch-linux-amd64/usr/bin/fastfetch" "fastfetch" \
     && install_ok "fastfetch v${FASTFETCH_VER}" || install_fail "fastfetch" "download/extract failed"
   rm -rf "$_tmp"
 fi
@@ -137,29 +147,29 @@ fi
 FNM_VER="{{ .tools.fnm }}"
 if need_install "fnm" "$FNM_VER"; then
   info "Installing fnm v${FNM_VER}"
-  _tmp=$(mktemp -d)
-  curl -fSL "https://github.com/Schniz/fnm/releases/download/v${FNM_VER}/fnm-linux.zip" \
-    -o "$_tmp/fnm.zip" 2>/dev/null \
-    && unzip -qo "$_tmp/fnm.zip" -d "$HOME/.local/bin/" fnm \
+  install_zip_member "fnm" "$FNM_VER" \
+    "https://github.com/Schniz/fnm/releases/download/v${FNM_VER}/fnm-linux.zip" \
+    "fnm-${FNM_VER}-linux.zip" "fnm" "fnm" \
     && install_ok "fnm v${FNM_VER}" || install_fail "fnm" "download/extract failed"
   # 生成 zsh 补全
   mkdir -p "$HOME/.local/share/zsh/site-functions"
   "$HOME/.local/bin/fnm" completions --shell zsh > "$HOME/.local/share/zsh/site-functions/_fnm" 2>/dev/null
-  rm -rf "$_tmp"
 fi
 
 # --- tealdeer (tldr client) ---
 TEALDEER_VER="{{ .tools.tealdeer }}"
 if need_install "tldr" "$TEALDEER_VER"; then
   info "Installing tealdeer v${TEALDEER_VER}"
-  curl -fSL -o "$HOME/.local/bin/tldr" \
-    "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/tealdeer-linux-x86_64-musl" 2>/dev/null \
-    && chmod +x "$HOME/.local/bin/tldr" \
+  install_file_binary "tealdeer" "$TEALDEER_VER" \
+    "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/tealdeer-linux-x86_64-musl" \
+    "tealdeer-${TEALDEER_VER}-linux-x86_64-musl" "tldr" \
     && install_ok "tealdeer v${TEALDEER_VER}" || install_fail "tealdeer" "download failed"
   # 下载 zsh 补全
   mkdir -p "$HOME/.local/share/zsh/site-functions"
-  curl -fSL -o "$HOME/.local/share/zsh/site-functions/_tldr" \
-    "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/completions_zsh" 2>/dev/null
+  _completion=$(download_cached "tealdeer-completion" "$TEALDEER_VER" \
+    "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/completions_zsh" \
+    "tealdeer-${TEALDEER_VER}-completions_zsh")
+  install -m 644 "$_completion" "$HOME/.local/share/zsh/site-functions/_tldr"
 fi
 
 # --- chezmoi zsh 补全 ---

@@ -80,6 +80,14 @@ WSL 额外：[xclip](https://github.com/astrand/xclip) | 服务器额外：[ioto
 
 **升级流程**：修改 `.chezmoidata/config.toml` 中的版本号 → `chezmoi apply` → 脚本自动比较版本 → 仅在版本不匹配时下载安装。
 
+GitHub release 二进制会先下载到缓存目录，再从缓存解压并原子替换目标二进制：
+
+```text
+~/.cache/dotfiles/downloads/
+```
+
+交互终端中下载会显示 `curl` 进度条；日志/CI 环境中会保持安静，只输出错误和脚本状态。缓存文件存在时会直接复用，版本号变化会生成新的缓存文件。
+
 ## Shell 架构
 
 zsh 配置拆成独立模块，由 `dot_zshrc.tmpl` 按顺序 source：
