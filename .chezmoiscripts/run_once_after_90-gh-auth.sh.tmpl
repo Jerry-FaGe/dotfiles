@@ -2,17 +2,22 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "=== Checking GitHub CLI authentication ==="
+section() { printf '\n==> %s\n' "$1"; }
+info()    { printf '[info] %s\n' "$1"; }
+ok()      { printf '[ok] %s\n' "$1"; }
+warn()    { printf '[warn] %s\n' "$1" >&2; }
+
+section "Checking GitHub CLI authentication"
 
 export PATH="$HOME/.local/bin:$PATH"
 
 if ! command -v gh >/dev/null 2>&1; then
-  echo "gh not found, skipping GitHub CLI authentication check."
+  warn "gh not found, skipping GitHub CLI authentication check"
   exit 0
 fi
 
 if gh auth status --hostname github.com >/dev/null 2>&1; then
-  echo "GitHub CLI already authenticated."
+  ok "GitHub CLI already authenticated"
   exit 0
 fi
 
@@ -20,12 +25,12 @@ if [[ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ]]; then
   token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
   if printf '%s\n' "$token" | gh auth login --hostname github.com --with-token; then
     gh auth setup-git --hostname github.com || true
-    echo "GitHub CLI authenticated from GH_TOKEN/GITHUB_TOKEN."
+    ok "GitHub CLI authenticated from GH_TOKEN/GITHUB_TOKEN"
     exit 0
   fi
 fi
 
-echo "GitHub CLI is not authenticated."
-echo "Run manually: gh auth login --hostname github.com --git-protocol ssh --web"
-echo "Then run: gh auth setup-git --hostname github.com"
+warn "GitHub CLI is not authenticated"
+info "Run manually: gh auth login --hostname github.com --git-protocol ssh --web"
+info "Then run: gh auth setup-git --hostname github.com"
 {{ end -}}

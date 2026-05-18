@@ -2,11 +2,16 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "=== Setting up default shell ==="
+section() { printf '\n==> %s\n' "$1"; }
+info()    { printf '[info] %s\n' "$1"; }
+ok()      { printf '[ok] %s\n' "$1"; }
+warn()    { printf '[warn] %s\n' "$1" >&2; }
+
+section "Setting up default shell"
 
 # 确保 zsh 已安装
 if ! command -v zsh >/dev/null 2>&1; then
-  echo "zsh not found, skipping shell setup"
+  warn "zsh not found, skipping shell setup"
   exit 0
 fi
 
@@ -15,10 +20,10 @@ ZSH_PATH=$(which zsh)
 CURRENT_SHELL=$(getent passwd "$USER" | cut -d: -f7)
 
 if [[ "$CURRENT_SHELL" != "$ZSH_PATH" ]]; then
-  echo "Setting default shell to zsh..."
+  info "Setting default shell to zsh: $ZSH_PATH"
   if ! sudo -n true 2>/dev/null && ! { [[ -t 0 ]] && sudo -v; }; then
-    echo "WARN: sudo is unavailable, skipping shell setup."
-    echo "Run manually: sudo chsh -s $ZSH_PATH $USER"
+    warn "sudo is unavailable, skipping shell setup"
+    info "Run manually: sudo chsh -s $ZSH_PATH $USER"
     exit 0
   fi
 
@@ -28,14 +33,12 @@ if [[ "$CURRENT_SHELL" != "$ZSH_PATH" ]]; then
   fi
 
   if sudo chsh -s "$ZSH_PATH" "$USER"; then
-    echo "Default shell set to zsh. Changes take effect on next login."
+    ok "Default shell set to zsh. Changes take effect on next login."
   else
-    echo "WARN: chsh failed, skipping shell setup."
-    echo "Run manually: sudo chsh -s $ZSH_PATH $USER"
+    warn "chsh failed, skipping shell setup"
+    info "Run manually: sudo chsh -s $ZSH_PATH $USER"
   fi
 else
-  echo "zsh is already the default shell."
+  ok "zsh is already the default shell"
 fi
-
-echo "=== Shell setup done ==="
 {{ end -}}

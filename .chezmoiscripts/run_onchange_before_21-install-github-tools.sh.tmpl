@@ -2,18 +2,18 @@
 #!/bin/bash
 set -uo pipefail
 
-echo "=== Installing GitHub release tools ==="
-
 export PATH="$HOME/.local/bin:$PATH"
 
+{{ includeTemplate "install-tools-functions.sh.tmpl" . }}
+
+section "Installing GitHub release tools"
+
 if [[ "{{ .chezmoi.arch }}" != "amd64" ]]; then
-  echo "WARN: GitHub release tools installer currently supports linux/amd64 only; detected {{ .chezmoi.os }}/{{ .chezmoi.arch }}."
+  warn "GitHub release tools installer currently supports linux/amd64 only; detected {{ .chezmoi.os }}/{{ .chezmoi.arch }}."
   exit 0
 fi
 
 mkdir -p "$HOME/.local/bin"
-
-{{ includeTemplate "install-tools-functions.sh.tmpl" . }}
 
 #######################################################
 # GitHub release 二进制（锁版本）
@@ -22,7 +22,7 @@ mkdir -p "$HOME/.local/bin"
 # --- fzf ---
 FZF_VER="{{ .tools.fzf }}"
 if need_install "fzf" "$FZF_VER"; then
-  echo "Installing fzf v${FZF_VER}..."
+  info "Installing fzf v${FZF_VER}"
   curl -fSL "https://github.com/junegunn/fzf/releases/download/v${FZF_VER}/fzf-${FZF_VER}-linux_amd64.tar.gz" \
     | tar xz -C "$HOME/.local/bin" fzf 2>/dev/null \
     && install_ok "fzf v${FZF_VER}" || install_fail "fzf" "download/extract failed"
@@ -31,7 +31,7 @@ fi
 # --- age ---
 AGE_VER="{{ .tools.age }}"
 if need_install "age" "$AGE_VER"; then
-  echo "Installing age v${AGE_VER}..."
+  info "Installing age v${AGE_VER}"
   _tmp=$(mktemp -d)
   curl -fSL "https://github.com/FiloSottile/age/releases/download/v${AGE_VER}/age-v${AGE_VER}-linux-amd64.tar.gz" \
     | tar xz -C "$_tmp" 2>/dev/null \
@@ -43,7 +43,7 @@ fi
 # --- Neovim ---
 NVIM_VER="{{ .tools.neovim }}"
 if need_install "nvim" "$NVIM_VER"; then
-  echo "Installing Neovim v${NVIM_VER}..."
+  info "Installing Neovim v${NVIM_VER}"
   curl -fSL -o "$HOME/.local/bin/nvim" \
     "https://github.com/neovim/neovim/releases/download/v${NVIM_VER}/nvim-linux-x86_64.appimage" 2>/dev/null \
     && chmod +x "$HOME/.local/bin/nvim" \
@@ -53,7 +53,7 @@ fi
 # --- eza ---
 EZA_VER="{{ .tools.eza }}"
 if need_install "eza" "$EZA_VER"; then
-  echo "Installing eza v${EZA_VER}..."
+  info "Installing eza v${EZA_VER}"
   curl -fSL "https://github.com/eza-community/eza/releases/download/v${EZA_VER}/eza_x86_64-unknown-linux-gnu.tar.gz" \
     | tar xz -C "$HOME/.local/bin" --strip-components=0 ./eza 2>/dev/null \
     && install_ok "eza v${EZA_VER}" || install_fail "eza" "download/extract failed"
@@ -62,7 +62,7 @@ fi
 # --- bat ---
 BAT_VER="{{ .tools.bat }}"
 if need_install "bat" "$BAT_VER"; then
-  echo "Installing bat v${BAT_VER}..."
+  info "Installing bat v${BAT_VER}"
   curl -fSL "https://github.com/sharkdp/bat/releases/download/v${BAT_VER}/bat-v${BAT_VER}-x86_64-unknown-linux-gnu.tar.gz" \
     | tar xz -C "$HOME/.local/bin" --strip-components=1 "bat-v${BAT_VER}-x86_64-unknown-linux-gnu/bat" 2>/dev/null \
     && install_ok "bat v${BAT_VER}" || install_fail "bat" "download/extract failed"
@@ -71,7 +71,7 @@ fi
 # --- fd ---
 FD_VER="{{ .tools.fd }}"
 if need_install "fd" "$FD_VER"; then
-  echo "Installing fd v${FD_VER}..."
+  info "Installing fd v${FD_VER}"
   curl -fSL "https://github.com/sharkdp/fd/releases/download/v${FD_VER}/fd-v${FD_VER}-x86_64-unknown-linux-gnu.tar.gz" \
     | tar xz -C "$HOME/.local/bin" --strip-components=1 "fd-v${FD_VER}-x86_64-unknown-linux-gnu/fd" 2>/dev/null \
     && install_ok "fd v${FD_VER}" || install_fail "fd" "download/extract failed"
@@ -80,7 +80,7 @@ fi
 # --- ripgrep ---
 RG_VER="{{ .tools.ripgrep }}"
 if need_install "rg" "$RG_VER"; then
-  echo "Installing ripgrep v${RG_VER}..."
+  info "Installing ripgrep v${RG_VER}"
   _tmp=$(mktemp -d)
   curl -fSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
     | tar xz -C "$_tmp" --strip-components=1 "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg" 2>/dev/null \
@@ -92,7 +92,7 @@ fi
 # --- yazi ---
 YAZI_VER="{{ .tools.yazi }}"
 if need_install "yazi" "$YAZI_VER"; then
-  echo "Installing yazi v${YAZI_VER}..."
+  info "Installing yazi v${YAZI_VER}"
   _tmp=$(mktemp -d)
   curl -fSL "https://github.com/sxyazi/yazi/releases/download/v${YAZI_VER}/yazi-x86_64-unknown-linux-gnu.zip" \
     -o "$_tmp/yazi.zip" 2>/dev/null \
@@ -106,7 +106,7 @@ fi
 # --- lazygit ---
 LAZYGIT_VER="{{ .tools.lazygit }}"
 if need_install "lazygit" "$LAZYGIT_VER"; then
-  echo "Installing lazygit v${LAZYGIT_VER}..."
+  info "Installing lazygit v${LAZYGIT_VER}"
   curl -fSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VER}/lazygit_${LAZYGIT_VER}_Linux_x86_64.tar.gz" \
     | tar xz -C "$HOME/.local/bin" lazygit 2>/dev/null \
     && install_ok "lazygit v${LAZYGIT_VER}" || install_fail "lazygit" "download/extract failed"
@@ -115,7 +115,7 @@ fi
 # --- lazydocker ---
 LAZYDOCKER_VER="{{ .tools.lazydocker }}"
 if need_install "lazydocker" "$LAZYDOCKER_VER"; then
-  echo "Installing lazydocker v${LAZYDOCKER_VER}..."
+  info "Installing lazydocker v${LAZYDOCKER_VER}"
   curl -fSL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VER}/lazydocker_${LAZYDOCKER_VER}_Linux_x86_64.tar.gz" \
     | tar xz -C "$HOME/.local/bin" lazydocker 2>/dev/null \
     && install_ok "lazydocker v${LAZYDOCKER_VER}" || install_fail "lazydocker" "download/extract failed"
@@ -124,7 +124,7 @@ fi
 # --- fastfetch ---
 FASTFETCH_VER="{{ .tools.fastfetch }}"
 if need_install "fastfetch" "$FASTFETCH_VER"; then
-  echo "Installing fastfetch v${FASTFETCH_VER}..."
+  info "Installing fastfetch v${FASTFETCH_VER}"
   _tmp=$(mktemp -d)
   curl -fSL "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VER}/fastfetch-linux-amd64.tar.gz" \
     | tar xz -C "$_tmp" 2>/dev/null \
@@ -136,7 +136,7 @@ fi
 # --- fnm ---
 FNM_VER="{{ .tools.fnm }}"
 if need_install "fnm" "$FNM_VER"; then
-  echo "Installing fnm v${FNM_VER}..."
+  info "Installing fnm v${FNM_VER}"
   _tmp=$(mktemp -d)
   curl -fSL "https://github.com/Schniz/fnm/releases/download/v${FNM_VER}/fnm-linux.zip" \
     -o "$_tmp/fnm.zip" 2>/dev/null \
@@ -151,7 +151,7 @@ fi
 # --- tealdeer (tldr client) ---
 TEALDEER_VER="{{ .tools.tealdeer }}"
 if need_install "tldr" "$TEALDEER_VER"; then
-  echo "Installing tealdeer v${TEALDEER_VER}..."
+  info "Installing tealdeer v${TEALDEER_VER}"
   curl -fSL -o "$HOME/.local/bin/tldr" \
     "https://github.com/tealdeer-rs/tealdeer/releases/download/v${TEALDEER_VER}/tealdeer-linux-x86_64-musl" 2>/dev/null \
     && chmod +x "$HOME/.local/bin/tldr" \
@@ -166,12 +166,5 @@ fi
 mkdir -p "$HOME/.local/share/zsh/site-functions"
 chezmoi completion zsh > "$HOME/.local/share/zsh/site-functions/_chezmoi" 2>/dev/null
 
-echo ""
-if [[ ${#FAILED[@]} -gt 0 ]]; then
-  echo "=== GitHub release tools installation failed ==="
-  printf '  - %s\n' "${FAILED[@]}"
-  exit 1
-fi
-
-echo "=== GitHub release tools installation done ==="
+install_summary "GitHub release tools installation done"
 {{ end -}}

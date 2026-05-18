@@ -2,7 +2,12 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "=== Installing apt packages ==="
+section() { printf '\n==> %s\n' "$1"; }
+info()    { printf '[info] %s\n' "$1"; }
+ok()      { printf '[ok] %s\n' "$1"; }
+warn()    { printf '[warn] %s\n' "$1" >&2; }
+
+section "Installing apt packages"
 
 # 基础包列表（从 .chezmoidata/config.toml 注入）
 PACKAGES=(
@@ -38,17 +43,19 @@ for pkg in "${PACKAGES[@]}"; do
 done
 
 if [[ ${#MISSING[@]} -eq 0 ]]; then
-  echo "All apt packages already installed."
+  ok "All apt packages already installed"
 else
-  echo "Missing packages: ${MISSING[*]}"
+  info "Missing packages: ${MISSING[*]}"
   if sudo -n true 2>/dev/null || { [[ -t 0 ]] && sudo -v; }; then
+    info "Updating apt package index"
     sudo apt-get update
+    info "Installing apt packages"
     sudo apt-get install -y "${MISSING[@]}"
   else
-    echo "WARN: sudo is unavailable, skipping apt install."
-    echo "Run manually: sudo apt-get update && sudo apt-get install -y ${MISSING[*]}"
+    warn "sudo is unavailable, skipping apt install"
+    info "Run manually: sudo apt-get update && sudo apt-get install -y ${MISSING[*]}"
   fi
 fi
 
-echo "=== apt packages done ==="
+ok "apt packages done"
 {{ end -}}

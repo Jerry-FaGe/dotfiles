@@ -1,10 +1,27 @@
 FAILED=()
 
-install_ok()    { echo "  ✓ $1"; }
-install_skip()  { echo "  ⊘ $1"; }
+section()       { printf '\n==> %s\n' "$1"; }
+info()          { printf '[info] %s\n' "$1"; }
+warn()          { printf '[warn] %s\n' "$1" >&2; }
+install_ok()    { printf '[ok] %s\n' "$1"; }
+install_skip()  { printf '[skip] %s\n' "$1"; }
 install_fail()  {
-  echo "  ✗ $1 failed: $2"
+  printf '[fail] %s: %s\n' "$1" "$2" >&2
   FAILED+=("$1: $2")
+}
+
+install_summary() {
+  local title="$1"
+
+  printf '\n'
+  if [[ ${#FAILED[@]} -gt 0 ]]; then
+    printf '[fail] %s\n' "$title"
+    printf 'Failures:\n'
+    printf '  - %s\n' "${FAILED[@]}"
+    exit 1
+  fi
+
+  printf '[ok] %s\n' "$title"
 }
 
 # 版本比较：返回 0=需要安装/升级，1=已是最新
@@ -19,6 +36,6 @@ need_install() {
     install_skip "$cmd v$have (up to date)"
     return 1
   fi
-  echo "  ↑ $cmd v${have:-unknown} → v$want"
+  info "$cmd v${have:-unknown} -> v$want"
   return 0
 }
