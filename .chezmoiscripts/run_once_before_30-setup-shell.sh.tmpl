@@ -7,6 +7,20 @@ info()    { printf '[info] %s\n' "$1"; }
 ok()      { printf '[ok] %s\n' "$1"; }
 warn()    { printf '[warn] %s\n' "$1" >&2; }
 
+ensure_sudo() {
+  if sudo -n true 2>/dev/null; then
+    return 0
+  fi
+
+  # chezmoi 常通过 curl | bash 或非 stdin TTY 执行；sudo 仍可从真实终端读密码。
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    sudo -v </dev/tty
+    return $?
+  fi
+
+  return 1
+}
+
 section "Setting up default shell"
 
 # 确保 zsh 已安装
@@ -21,7 +35,7 @@ CURRENT_SHELL=$(getent passwd "$USER" | cut -d: -f7)
 
 if [[ "$CURRENT_SHELL" != "$ZSH_PATH" ]]; then
   info "Setting default shell to zsh: $ZSH_PATH"
-  if ! sudo -n true 2>/dev/null && ! { [[ -t 0 ]] && sudo -v; }; then
+  if ! ensure_sudo; then
     warn "sudo is unavailable, skipping shell setup"
     info "Run manually: sudo chsh -s $ZSH_PATH $USER"
     exit 0

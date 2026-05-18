@@ -7,6 +7,20 @@ info()    { printf '[info] %s\n' "$1"; }
 ok()      { printf '[ok] %s\n' "$1"; }
 warn()    { printf '[warn] %s\n' "$1" >&2; }
 
+ensure_sudo() {
+  if sudo -n true 2>/dev/null; then
+    return 0
+  fi
+
+  # chezmoi 常通过 curl | bash 或非 stdin TTY 执行；sudo 仍可从真实终端读密码。
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    sudo -v </dev/tty
+    return $?
+  fi
+
+  return 1
+}
+
 section "Installing apt packages"
 
 # 基础包列表（从 .chezmoidata/config.toml 注入）
@@ -46,7 +60,7 @@ if [[ ${#MISSING[@]} -eq 0 ]]; then
   ok "All apt packages already installed"
 else
   info "Missing packages: ${MISSING[*]}"
-  if sudo -n true 2>/dev/null || { [[ -t 0 ]] && sudo -v; }; then
+  if ensure_sudo; then
     info "Updating apt package index"
     sudo apt-get update
     info "Installing apt packages"

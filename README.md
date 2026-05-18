@@ -42,6 +42,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply Jerry-FaGe/dotfiles
 > - `git` 和 `curl`（大部分发行版预装，如果没有：`sudo apt install git curl`）
 > - **仅支持 Debian/Ubuntu amd64**：安装脚本使用 apt + 硬编码 amd64 下载链接
 > - 首次 apply 需要 age 密钥；使用 `install.sh` 时会自动引导配置
+> - 通过 `curl | bash` 安装时，apt/chsh 脚本会从 `/dev/tty` 读取 sudo 密码；没有可用终端时才跳过并打印手动命令
 
 ## 工具清单
 

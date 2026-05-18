@@ -7,10 +7,24 @@ info()    { printf '[info] %s\n' "$1"; }
 ok()      { printf '[ok] %s\n' "$1"; }
 warn()    { printf '[warn] %s\n' "$1" >&2; }
 
+ensure_sudo() {
+  if sudo -n true 2>/dev/null; then
+    return 0
+  fi
+
+  # chezmoi 常通过 curl | bash 或非 stdin TTY 执行；sudo 仍可从真实终端读密码。
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    sudo -v </dev/tty
+    return $?
+  fi
+
+  return 1
+}
+
 section "Setting up GitHub CLI apt repository"
 
 if [[ ! -r /etc/apt/keyrings/githubcli-archive-keyring.gpg || ! -r /etc/apt/sources.list.d/github-cli.list ]]; then
-  if sudo -n true 2>/dev/null || { [[ -t 0 ]] && sudo -v; }; then
+  if ensure_sudo; then
     sudo mkdir -p -m 755 /etc/apt/keyrings /etc/apt/sources.list.d
 
     tmp_key=$(mktemp)
