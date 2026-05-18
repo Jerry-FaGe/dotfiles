@@ -3,6 +3,7 @@ README.md
 .gitignore
 LICENSE
 install.sh
+check.sh
 
 # 忽略仓库/编辑器/系统本地文件
 .git/

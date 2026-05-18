@@ -185,7 +185,10 @@ chezmoi diff                              # 预览变更
 chezmoi apply                             # 应用变更
 chezmoi update                            # 从远程拉取并应用
 chezmoi cd                                # 进入源码目录
+./check.sh                                # 仓库健康检查（模板渲染 + 语法 + dry-run）
 ```
+
+`check.sh` 会输出带框 banner 和逐步检查结果，覆盖安装入口、所有脚本模板渲染后的 bash 语法、zsh 模板语法、空白检查和 `chezmoi apply --dry-run`。
 
 ## 故障排除
 
