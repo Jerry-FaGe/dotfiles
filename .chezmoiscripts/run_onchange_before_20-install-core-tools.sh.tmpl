@@ -4,6 +4,7 @@ set -uo pipefail
 
 echo "=== Installing core tools via official installers ==="
 
+export PATH="$HOME/.local/bin:$PATH"
 mkdir -p "$HOME/.local/bin"
 
 {{ includeTemplate "install-tools-functions.sh.tmpl" . }}

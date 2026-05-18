@@ -4,6 +4,8 @@ set -euo pipefail
 
 echo "=== Checking GitHub CLI authentication ==="
 
+export PATH="$HOME/.local/bin:$PATH"
+
 if ! command -v gh >/dev/null 2>&1; then
   echo "gh not found, skipping GitHub CLI authentication check."
   exit 0

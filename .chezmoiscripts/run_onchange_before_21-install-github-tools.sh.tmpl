@@ -4,6 +4,8 @@ set -uo pipefail
 
 echo "=== Installing GitHub release tools ==="
 
+export PATH="$HOME/.local/bin:$PATH"
+
 if [[ "{{ .chezmoi.arch }}" != "amd64" ]]; then
   echo "WARN: GitHub release tools installer currently supports linux/amd64 only; detected {{ .chezmoi.os }}/{{ .chezmoi.arch }}."
   exit 0
