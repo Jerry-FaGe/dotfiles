@@ -34,6 +34,9 @@ source "$ZSH_CONFIG_DIR/prompt.zsh"
 # 7. 杂项
 source "$ZSH_CONFIG_DIR/proxy.zsh"
 
+# 8. 本机私有扩展：放置不进仓库的 alias/function/PATH，例如某台机器专属命令。
+[[ -r "$ZSH_CONFIG_DIR/local.zsh" ]] && source "$ZSH_CONFIG_DIR/local.zsh"
+
 #######################################################
 # 启动通知
 #######################################################

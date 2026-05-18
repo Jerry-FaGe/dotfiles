@@ -105,10 +105,21 @@ zsh 配置拆成独立模块，由 `dot_zshrc.tmpl` 按顺序 source：
 ├── functions.zsh        # 自定义函数
 ├── proxy.zsh            # 代理管理（WSL 自动检测 / server source 密文）
 ├── proxy.private.zsh    # [加密] 代理凭据（age 解密，600 权限）
+├── local.zsh            # [本机私有] 不进仓库的 alias/function/PATH
 └── prompt.zsh           # Starship 初始化（缓存）
 ```
 
 加载顺序很重要——completion 在插件前，prompt 在最后。
+
+如果某台机器有不适合进仓库的命令（例如本机手动安装的 `OpenClaw`），放到 `~/.config/zsh/local.zsh`：
+
+```zsh
+# 示例：恢复本机专属命令或 PATH
+pathprepend "$HOME/.local/share/openclaw/bin"
+alias OpenClaw="$HOME/.local/share/openclaw/OpenClaw"
+```
+
+`local.zsh` 已加入 `.chezmoiignore`，不会被同步到 GitHub，也不会覆盖其他机器。
 
 ## 跨环境适配
 

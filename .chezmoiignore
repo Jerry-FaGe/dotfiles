@@ -23,3 +23,6 @@ Thumbs.db
 # 防止误纳管本机私钥
 .config/chezmoi/key.txt
 .config/age/**
+
+# 本机私有 shell 扩展，不随 dotfiles 同步
+.config/zsh/local.zsh
