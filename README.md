@@ -177,6 +177,31 @@ dot_config/zsh/encrypted_private_proxy.private.zsh.age
 
 密钥位置：`~/.config/chezmoi/key.txt`（不进 git，不进仓库）。
 
+私密代理配置解密后的 schema 是一个 zsh 变量文件：
+
+```zsh
+PROXY_SERVER_IP="1.2.3.4"
+PROXY_PORT="7897"
+```
+
+字段说明：
+
+- `PROXY_SERVER_IP`：代理服务器 IP 或可解析主机名，必填
+- `PROXY_PORT`：代理端口，可选，未设置时默认 `7897`
+
+重建密文时先准备临时明文文件，再用 chezmoi 加密到目标路径：
+
+```bash
+umask 077
+cat > /tmp/proxy.private.zsh <<'EOF'
+PROXY_SERVER_IP="1.2.3.4"
+PROXY_PORT="7897"
+EOF
+
+chezmoi add --encrypt --destination ~/.config/zsh/proxy.private.zsh /tmp/proxy.private.zsh
+rm -f /tmp/proxy.private.zsh
+```
+
 ## 日常操作
 
 ```bash
