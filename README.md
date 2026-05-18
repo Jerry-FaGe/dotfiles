@@ -47,9 +47,9 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply Jerry-FaGe/dotfiles
 
 ### 通过 apt 安装（基础包）
 
-[zsh](https://www.zsh.org/) · [tmux](https://github.com/tmux/tmux) · tree · [jq](https://jqlang.github.io/jq/) · [ncdu](https://dev.yorhel.nl/ncdu) · unzip · curl · wget · [git](https://git-scm.com/) · [gh](https://cli.github.com/) · htop · [btop](https://github.com/aristocratos/btop)
+[zsh](https://www.zsh.org/) · [tmux](https://github.com/tmux/tmux) · [tree](http://mama.indstate.edu/users/ice/tree/) · [jq](https://jqlang.github.io/jq/) · [ncdu](https://dev.yorhel.nl/ncdu) · [unzip](https://infozip.sourceforge.net/UnZip.html) · [curl](https://curl.se/) · [wget](https://www.gnu.org/software/wget/) · [git](https://git-scm.com/) · [gh](https://cli.github.com/) · [htop](https://htop.dev/) · [btop](https://github.com/aristocratos/btop)
 
-WSL 额外：xclip | 服务器额外：iotop
+WSL 额外：[xclip](https://github.com/astrand/xclip) | 服务器额外：[iotop](https://github.com/Tomas-M/iotop)
 
 ### 通过官方脚本安装（自动最新版）
 
@@ -128,6 +128,7 @@ zsh 配置拆成独立模块，由 `dot_zshrc.tmpl` 按顺序 source：
 │   └── config.toml                     # 公开数据：apt 包列表 + 工具版本号
 ├── .chezmoitemplates/
 │   └── install-tools-functions.sh.tmpl # 安装脚本公共函数
+├── .chezmoiexternal.toml               # 外部依赖占位声明
 ├── .chezmoiscripts/
 │   ├── run_onchange_before_09-setup-gh-apt-repo.sh.tmpl  # GitHub CLI apt 源
 │   ├── run_onchange_before_10-install-apt.sh.tmpl        # apt 包安装
