@@ -19,10 +19,21 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   spec = {
-    -- LazyVim 官方主配置。
+    -- 1. LazyVim 官方主配置（必须最先加载）。
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
 
-    -- 本地自定义插件和覆写都放到 lua/plugins 下，保持官方推荐结构。
+    -- 2. LazyVim 官方 extras（必须在 plugins 之前）。
+    { import = "lazyvim.plugins.extras.lang.json" },
+    { import = "lazyvim.plugins.extras.lang.toml" },
+    { import = "lazyvim.plugins.extras.lang.yaml" },
+    { import = "lazyvim.plugins.extras.lang.typescript" },
+    { import = "lazyvim.plugins.extras.lang.tailwind" },
+    { import = "lazyvim.plugins.extras.lang.python" },
+    { import = "lazyvim.plugins.extras.lang.docker" },
+    { import = "lazyvim.plugins.extras.linting.eslint" },
+    { import = "lazyvim.plugins.extras.editor.inc-rename" },
+
+    -- 3. 本地自定义插件和覆写（最后加载）。
     { import = "plugins" },
   },
   defaults = {
