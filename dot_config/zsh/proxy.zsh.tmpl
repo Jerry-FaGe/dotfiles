@@ -52,7 +52,13 @@ proxy-on() {
     return 1
   fi
 
+  # 判断代理是否在本机运行。
+  # 1. 先查网卡 IP（适用于非 NAT 环境）
+  # 2. 再查公网 IP（适用于云服务器 NAT 环境）
   if ip addr show 2>/dev/null | grep -q "$PROXY_SERVER_IP"; then
+    proxy_url="http://127.0.0.1:${PROXY_PORT:-7897}"
+  elif command -v dig >/dev/null 2>&1 && \
+       [[ "$(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null)" == "$PROXY_SERVER_IP" ]]; then
     proxy_url="http://127.0.0.1:${PROXY_PORT:-7897}"
   else
     proxy_url="http://${PROXY_SERVER_IP}:${PROXY_PORT:-7897}"
